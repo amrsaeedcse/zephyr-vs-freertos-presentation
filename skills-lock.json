@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "pdf": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pdf/SKILL.md",
+      "computedHash": "9dfe0efa53dd8a53118cac10c3ee745008566ad8b5344ada9b0ff97579eae7c5"
+    },
+    "pptx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pptx/SKILL.md",
+      "computedHash": "dd3338f0a32a3d7d269b501d74ab044f696d93e12e076d48b6b380877b5c8e56"
+    }
+  }
+}
