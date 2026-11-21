@@ -1,12 +1,12 @@
 # Zephyr RTOS vs. FreeRTOS — Embedded Systems Architecture Presentation
 
-A 32-slide technical presentation comparing **FreeRTOS micro-kernel internals** against **Zephyr RTOS's full embedded OS architecture**, complete with native PowerPoint animations/transitions, official upstream documentation references, and detailed bilingual (Egyptian Arabic + English) Speaker Notes on every slide.
+A 34-slide technical presentation comparing **FreeRTOS micro-kernel internals** against **Zephyr RTOS's full embedded OS architecture**, complete with clean conceptual diagrams, native PowerPoint animations/transitions, official upstream documentation references, and detailed bilingual (Egyptian Arabic + English) Speaker Notes on every slide.
 
 ## Files Included
 
 | File | Description |
 |---|---|
-| [`Zephyr_RTOS_vs_FreeRTOS.pptx`](./Zephyr_RTOS_vs_FreeRTOS.pptx) | Main 32-slide animated PowerPoint deck (native transitions, choreography & speaker notes) |
+| [`Zephyr_RTOS_vs_FreeRTOS.pptx`](./Zephyr_RTOS_vs_FreeRTOS.pptx) | Main 34-slide animated PowerPoint deck (native transitions, choreography & speaker notes) |
 | [`Zephyr_RTOS_vs_FreeRTOS.pdf`](./Zephyr_RTOS_vs_FreeRTOS.pdf) | Portable PDF backup for instant browser preview or projector fallback |
 | [`fonts/`](./fonts/) | Typography pack (`Schibsted Grotesk`, `Figtree`, `JetBrains Mono`) for pixel-accurate rendering |
 
@@ -17,42 +17,44 @@ To make sure PowerPoint renders the exact layout and spacing on every teammate's
 2. Select all `.ttf` files → **Right-click → Install** (Windows) or double-click to install in Font Book (macOS).
 3. Restart PowerPoint and open [`Zephyr_RTOS_vs_FreeRTOS.pptx`](./Zephyr_RTOS_vs_FreeRTOS.pptx) (press **`F5`** to preview all animations & transitions).
 
-## Presentation Outline (32 Slides)
+## Presentation Outline (34 Slides)
 
 ### Opening & Roadmap (Slides 1–2)
-1. **Cover:** Zephyr RTOS vs. FreeRTOS — From Micro-Kernel Internals to a Full Embedded OS
-2. **Architecture Roadmap:** 6-stage overview
+1. **Cover:** Zephyr RTOS vs. FreeRTOS — From Real-Time Kernel Internals to a Full Embedded OS
+2. **Presentation Roadmap:** 6-stage connected narrative overview
 
-### Part I — RTOS & FreeRTOS Under the Hood (Slides 3–10)
-3. **Why an RTOS?** Super-Loop (`while(1)`) stall trap vs. preemptive determinism
-4. **Task Anatomy in RAM:** TCB (`pxTopOfStack`, priority, lists), Private Stack (HW/SW frames) & 4 lifecycle states
-5. **Inside Every 1 ms SysTick:** `xTickCount++`, Delayed List wake-up, `PendSV`, Preemptive Priority & Round-Robin
-6. **Blocking Discipline:** Three production rules for `xTicksToWait` (`0`, `pdMS_TO_TICKS(100)`, `portMAX_DELAY`)
-7. **Sync Primitives & Priority Inversion:** Queues (`memcpy`), Binary Semaphores, Mutex ownership & Priority Inheritance
-8. **Critical Sections (`BASEPRI`):** Selective ARM Cortex-M masking (`5–15` masked vs. `0–4` unmasked)
-9. **Vector Table Reality:** Why FreeRTOS requires `*FromISR()` and manual `portYIELD_FROM_ISR()`
-10. **FreeRTOS Memory Reality:** `heap_1..5` + Static API & external Swiss-cheese fragmentation without an MMU
+### Part I — RTOS & FreeRTOS Under the Hood (Slides 3–12)
+3. **Why an RTOS?** Super-Loop (`while(1)`) sequential stalls vs. independent Threads & non-blocking waits
+4. **Inside Every Thread:** Task Control Block (Identity Card), Private Stack (Thread Workspace) & 4 Lifecycle Modes (`READY`, `RUNNING`, `BLOCKED`, `SUSPENDED`)
+5. **How Multiple Threads Share One CPU Core:** Preemptive Priority vs. Round-Robin 1 ms time-slicing timelines
+6. **Inside Every 1 ms Tick:** 4-step SysTick pipeline (`Tick IRQ` → `Timers` → `Unblock Ready` → `PendSV Context Switch`)
+7. **Blocking Discipline:** Three core timeout strategies (`Wait Forever`, `Bounded Wait`, `No Wait`)
+8. **Coordinating Threads:** Choosing between `Message Queue`, `Binary Semaphore`, and `Mutex Lock`
+9. **The Priority Inversion Trap & How Mutexes Fix It:** Visual step-by-step trace of Priority Inversion vs. Mutex Priority Inheritance
+10. **Fast Shared-Data Protection:** Critical Sections & selective ARM Cortex-M `BASEPRI` threshold masking (`0–4` unmasked vs. `5–15` paused)
+11. **Hardware Interrupts & `*FromISR()`:** Why Vector Table direct jumps require IRQ-safe APIs & `portYIELD_FROM_ISR()`
+12. **RAM Allocation & Fragmentation Trap:** Day 1 contiguous RAM vs. Day 90 Swiss-cheese 4 KB holes (`heap_1..5` vs. Static API)
 
-### Architectural Pivot & Part II — Zephyr RTOS 16 Core Pillars (Slides 11–32)
-11. **Section 02 — Enter Zephyr RTOS:** Breaking out of FreeRTOS's "Glue Code Wall"
-12. **Batteries-Included Embedded OS:** 1,000+ boards, 13+ CPU architectures, Linux Foundation & Apache 2.0
-13. **Devicetree Hardware Decoupling:** 3-layer cascade (`.dtsi` → `.dts` → `app.overlay`) & zero-edit MCU swapping
-14. **Zero Bytes of RAM (`.rodata`) & Footprint:** Compile-time Python DTS binding + real Flash/RAM bar chart
-15. **Unified Driver Model:** Flash function-pointer v-tables (`gpio_dt_spec → struct device → api`) & `static inline`
-16. **Automatic Boot Bootstrap (`SYS_INIT`):** Ordered `EARLY` → `PRE_KERNEL_1/2` → `POST_KERNEL` → `APPLICATION`
-17. **Kconfig (`prj.conf`), CMake & `west`:** Auto-dependency solving, dead-code pruning & `--sysbuild`
-18. **Rich Scheduling & SMP:** Cooperative (`< 0`), Preemptive (`>= 0`), EDF, `k_work`, Tickless Idle & CPU masks
-19. **Smarter Interrupts:** `_isr_wrapper`, 1-cycle `IPSR` check (no `*FromISR()`), `IRQ_DIRECT_CONNECT` & `IRQ_ZERO_LATENCY`
-20. **Deterministic Memory:** `k_mem_slab` (`O(1)` intrusive list) vs. `sys_mem_blocks` (Bank 0 bitmap for SRAM Bank 1 power-off)
-21. **IPC Toolbox & `k_fifo` Stack Trap:** `k_msgq` vs. `k_fifo`/`k_lifo` (4-byte reserved pointer & dangling Stack bug), `k_pipe`, `k_poll`
-22. **Zbus & Multi-Core AMP:** Pub/Sub software bus + `ipc_service` / OpenAMP / RPMsg
-23. **MPU User Mode & Memory Domains:** Hardware stack guards, `k_mem_domain`, `k_object_access_grant()` & SVC syscalls
-24. **Security, OTA & Functional Safety:** ARM TrustZone (TF-M), MCUboot atomic A/B rollback, IEC 61508 SIL 3 / ISO 26262 & SBOM
-25. **Automatic Power Management:** PM Policy Manager (`pm_state`), Device Runtime PM & nested Power Domains
-26. **Production Connectivity & Storage Stacks:** BLE Host+Controller, IPv4/IPv6, Matter, Thread, LittleFS & MCUmgr
-27. **Host Simulation & Observability:** `native_sim`, `west twister`, Zephyr Shell, Deferred Logging, CTF & Coredump
-28. **Side-by-Side Code Showdown:** `freertos_stm32.c` vs. portable `zephyr_portable.c`
-29. **Honest Engineering Trade-Offs:** Learning curve, macro debugging, workspace footprint & framework opinionation
-30. **Full Architecture Comparison Matrix:** 8-layer side-by-side comparison
-31. **References & Official Technical Documentation:** Verified FreeRTOS, ARM Cortex-M4, Zephyr, MCUboot & TF-M sources
-32. **Engineering Verdict — Thank You & Q&A:** Constraint-driven decision guide
+### Architectural Pivot & Part II — Zephyr RTOS 16 Core Pillars (Slides 13–34)
+13. **Section 02 — Enter Zephyr RTOS:** Breaking out of FreeRTOS's manual glue-code wall
+14. **Full "Batteries-Included" OS:** 1,000+ boards, 13+ CPU architectures, Linux Foundation & Apache 2.0
+15. **Devicetree Hardware Decoupling:** 3-layer cascade (`.dtsi` → `.dts` → `app.overlay`) & zero-edit MCU swapping
+16. **Zero Bytes of RAM (`.rodata`) & Footprint:** Compile-time Python DTS binding + real Flash/RAM bar chart
+17. **Unified Driver Model:** Flash function-pointer v-tables (`gpio_dt_spec → struct device → api`) & `static inline`
+18. **Before `main()` Starts (`SYS_INIT`):** 5-stage linker-sorted boot sequence (`EARLY` → `PRE_KERNEL_1/2` → `POST_KERNEL` → `APPLICATION`)
+19. **Kconfig (`prj.conf`), CMake & `west`:** Auto-dependency solving, dead-code pruning & `--sysbuild`
+20. **Rich Scheduling & SMP:** Cooperative (`< 0`), Preemptive (`>= 0`), EDF, `k_work`, Tickless Idle & CPU masks
+21. **Why No `*FromISR()`:** `_isr_wrapper`, 1-cycle `IPSR` check, `IRQ_DIRECT_CONNECT` & `IRQ_ZERO_LATENCY`
+22. **Deterministic Memory & Power:** `k_mem_slab` (`O(1)` intrusive list) vs. `sys_mem_blocks` (SRAM Bank 1 power-off bitmap)
+23. **IPC Toolbox & `k_fifo` Stack Trap:** `k_msgq` vs. `k_fifo`/`k_lifo` (4-byte reserved pointer & dangling Stack bug), `k_pipe`, `k_poll`
+24. **Zbus & Multi-Core AMP:** Pub/Sub software bus + `ipc_service` / OpenAMP / RPMsg
+25. **MPU User Mode & Memory Domains:** Hardware stack guards, `k_mem_domain`, `k_object_access_grant()` & SVC syscalls
+26. **TrustZone (TF-M), Signed OTA & Safety Certs:** ARM TrustZone, MCUboot atomic A/B rollback, IEC 61508 SIL 3 / ISO 26262 & SBOM
+27. **Automatic Power Management:** PM Policy Manager (`pm_state`), Device Runtime PM & nested Power Domains
+28. **Built-In Connectivity & Storage Stacks:** BLE Host+Controller, IPv4/IPv6, Matter, Thread, LittleFS & MCUmgr
+29. **Boot Firmware on Your PC:** `native_sim`, `west twister`, Zephyr Shell, Deferred Logging, CTF & Coredump
+30. **Code Showdown:** `freertos_stm32.c` vs. portable `zephyr_portable.c`
+31. **Where Zephyr Hurts:** Honest trade-offs (learning curve, macro debugging, workspace size & opinionation)
+32. **FreeRTOS vs. Zephyr:** Full 8-layer architecture comparison matrix
+33. **References & Official Technical Documentation:** Verified FreeRTOS, ARM Cortex-M4, Zephyr, MCUboot & TF-M sources
+34. **Engineering Verdict — Thank You & Q&A:** Constraint-driven decision guide
