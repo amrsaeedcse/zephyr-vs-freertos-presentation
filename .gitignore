@@ -1,0 +1,15 @@
+# PowerPoint & Office temp lock files
+~$*.pptx
+~$*.ppt
+*.tmp
+
+# Agent / local tooling directories
+.agents/
+.claude/
+skills-lock.json
+
+# Python / OS artifacts
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
