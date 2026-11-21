@@ -1,15 +1,16 @@
-# PowerPoint & Office temp lock files
-~$*.pptx
-~$*.ppt
-*.tmp
+# Heavy packages & virtual environments
+.venv/
+venv/
+env/
+node_modules/
 
-# Agent / local tooling directories
-.agents/
-.claude/
-skills-lock.json
-
-# Python / OS artifacts
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Temporary lock files created while Office has a presentation open (~$...)
+~$*
+
+# OS metadata
 .DS_Store
 Thumbs.db

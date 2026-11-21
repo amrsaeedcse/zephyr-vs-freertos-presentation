@@ -4,11 +4,30 @@ A 34-slide technical presentation comparing **FreeRTOS micro-kernel internals** 
 
 ## Files Included
 
-| File | Description |
+| Path | Description |
 |---|---|
 | [`Zephyr_RTOS_vs_FreeRTOS.pptx`](./Zephyr_RTOS_vs_FreeRTOS.pptx) | Main 34-slide animated PowerPoint deck (native transitions, choreography & speaker notes) |
 | [`Zephyr_RTOS_vs_FreeRTOS.pdf`](./Zephyr_RTOS_vs_FreeRTOS.pdf) | Portable PDF backup for instant browser preview or projector fallback |
+| [`build.py`](./build.py) | One-command builder (rebuilds skeleton, slides, animations, validation & optional PDF/PNG QA) |
+| [`src/`](./src/) | Editable Python slide generator (`stage1_skeleton.py`, `stage2_build_deck.py`, `stage2_populate_utils.py`) & PowerShell animation/export scripts (`add_pro_animations.ps1`, `export_qa.ps1`) |
+| [`assets/`](./assets/) | Clean base template ([`template_base.pptx`](./assets/template_base.pptx)), 34-slide skeleton ([`template_skeleton_34.pptx`](./assets/template_skeleton_34.pptx)) and images ([`assets/images/`](./assets/images/)) |
 | [`fonts/`](./fonts/) | Typography pack (`Schibsted Grotesk`, `Figtree`, `JetBrains Mono`) for pixel-accurate rendering |
+| [`requirements.txt`](./requirements.txt) | Python dependencies (`python-pptx`, `Pillow`, `lxml`, `defusedxml`) |
+| [`.agents/`](./.agents/) | Installed `pptx` & `pdf` AI skills and OOXML schema/validation helpers |
+
+## Editing & Rebuilding with Python ("Vibe Coding" Workflow)
+
+Any collaborator can edit slide content, layouts, diagrams, or speaker notes directly in Python and rebuild in one command:
+
+```bash
+pip install -r requirements.txt
+python build.py
+```
+
+Useful build flags:
+- `python build.py --out preview.pptx --no-anim` — fast build without opening PowerPoint (works on Windows/macOS/Linux)
+- `python build.py --skeleton` — regenerate `assets/template_skeleton_34.pptx` from `assets/template_base.pptx`
+- `python build.py --pdf --qa` — rebuild PPTX, apply animations, export PDF backup & render 1600×900 slide PNGs (Windows PowerPoint required for COM animations/PDF/PNG export)
 
 ## Team Setup (Recommended — 10 Seconds)
 
@@ -31,7 +50,7 @@ To make sure PowerPoint renders the exact layout and spacing on every teammate's
 7. **Blocking Discipline:** Three core timeout strategies (`Wait Forever`, `Bounded Wait`, `No Wait`)
 8. **Coordinating Threads:** Choosing between `Message Queue`, `Binary Semaphore`, and `Mutex Lock`
 9. **The Priority Inversion Trap & How Mutexes Fix It:** Visual step-by-step trace of Priority Inversion vs. Mutex Priority Inheritance
-10. **Fast Shared-Data Protection:** Critical Sections & selective ARM Cortex-M `BASEPRI` threshold masking (`0–4` unmasked vs. `5–15` paused)
+10. **Thread <-> Interrupt Sharing (Critical Section, Spinlock & `BASEPRI`):** Selective ARM interrupt masking (`0–4` live vs. `5–15` paused) + 1-core vs. multi-core Spinlock link
 11. **Hardware Interrupts & `*FromISR()`:** Why Vector Table direct jumps require IRQ-safe APIs & `portYIELD_FROM_ISR()`
 12. **RAM Allocation & Fragmentation Trap:** Day 1 contiguous RAM vs. Day 90 Swiss-cheese 4 KB holes (`heap_1..5` vs. Static API)
 
