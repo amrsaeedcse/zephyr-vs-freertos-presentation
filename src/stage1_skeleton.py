@@ -29,9 +29,9 @@ PLAN = [
     12,  # 12: Memory Allocation & The Swiss-Cheese Fragmentation Trap (Day 1 vs Day 90 Visual)
     5,   # 13: Architectural Pivot 02 — Moving Beyond Micro-Kernels: Enter Zephyr RTOS (Boards Photo)
     15,  # 14: Zephyr Batteries-Included Embedded OS Canvas
-    18,  # 15: Devicetree 3-Layer Hardware Decoupling Tree
-    11,  # 16: 0 Bytes RAM (.rodata) & Real Footprint Chart
-    6,   # 17: Unified Driver Model (gpio_dt_spec -> struct device -> api + static inline)
+    18,  # 15: Step 1 - Devicetree + prj.conf -> devicetree_generated.h + CMake filter
+    6,   # 16: Step 2 - Unified Driver Model (main.c -> struct device -> API table -> HW)
+    11,  # 17: 0 Bytes RAM (.rodata) & Real Footprint Chart
     8,   # 18: Ordered SYS_INIT Boot Levels Before main() (5-Stage Left-to-Right Sequence)
     17,  # 19: Kconfig (prj.conf) + CMake + west & Sysbuild
     9,   # 20: Rich Scheduling: Cooperative (<0), Preemptive (>=0), EDF, Workqueues, Tickless & SMP

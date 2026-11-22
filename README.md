@@ -57,9 +57,9 @@ To make sure PowerPoint renders the exact layout and spacing on every teammate's
 ### Architectural Pivot & Part II — Zephyr RTOS 16 Core Pillars (Slides 13–34)
 13. **Section 02 — Enter Zephyr RTOS:** Breaking out of FreeRTOS's manual glue-code wall
 14. **Full "Batteries-Included" OS:** 1,000+ boards, 13+ CPU architectures, Linux Foundation & Apache 2.0
-15. **Devicetree Hardware Decoupling:** 3-layer cascade (`.dtsi` → `.dts` → `app.overlay`) & zero-edit MCU swapping
-16. **Zero Bytes of RAM (`.rodata`) & Footprint:** Compile-time Python DTS binding + real Flash/RAM bar chart
-17. **Unified Driver Model:** Flash function-pointer v-tables (`gpio_dt_spec → struct device → api`) & `static inline`
+15. **Step 1 · Devicetree & `prj.conf`:** `.dtsi` + `.dts` + `app.overlay` + `prj.conf` → `devicetree_generated.h` & CMake driver filtering
+16. **Step 2 · Unified Drivers:** How `main.c` reaches any chip (`DT macro` → `struct device` → Flash API table → hardware registers)
+17. **Does Devicetree Waste RAM? (`.rodata` & Footprint):** Zero runtime RAM overhead + Flash/RAM comparison chart
 18. **Before `main()` Starts (`SYS_INIT`):** 5-stage linker-sorted boot sequence (`EARLY` → `PRE_KERNEL_1/2` → `POST_KERNEL` → `APPLICATION`)
 19. **Kconfig (`prj.conf`), CMake & `west`:** Auto-dependency solving, dead-code pruning & `--sysbuild`
 20. **Rich Scheduling & SMP:** Cooperative (`< 0`), Preemptive (`>= 0`), EDF, `k_work`, Tickless Idle & CPU masks

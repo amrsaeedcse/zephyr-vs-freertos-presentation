@@ -51,7 +51,7 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
     } elseif ($sn -in @(3, 13, 30, 34)) {
         # Major narrative pivots: Part I start, Part II Enter Zephyr, Code Showdown, Final Verdict
         $tr.EntryEffect = $TR_PUSH_L; $tr.Duration = 0.72
-    } elseif ($sn -in @(2, 14, 16, 29, 32, 33)) {
+    } elseif ($sn -in @(2, 14, 17, 29, 32, 33)) {
         # Structural reveals: Roadmap, OS Canvas, Footprint Chart, native_sim, Full Matrix, References
         $tr.EntryEffect = $TR_REVEAL; $tr.Duration = 0.60
     } else {
@@ -120,7 +120,7 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -in @(6, 9, 11, 17, 18)) {
+    elseif ($sn -in @(6, 9, 11, 16, 18)) {
         # LEFT-TO-RIGHT 4 OR 5 STAGE PIPELINES (SysTick, Priority Inversion, *FromISR, Unified Drivers, SYS_INIT)
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
@@ -132,12 +132,12 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
                 # Bottom Fix Track follows Top Trap Track
                 $step = [Math]::Min(3, [Math]::Max(0, [int][Math]::Floor(($it.X - 0.6) / 2.1)))
                 Add-Anim $sl $it.Shape $AN_FADE 0.38 (0.58 + $step * 0.10) | Out-Null
-            } elseif ($it.Y -lt 3.20) {
+            } elseif ($it.Y -lt $(if ($sn -eq 16) { 2.45 } else { 3.20 })) {
                 $div = if ($sn -eq 18) { 1.70 } else { 2.10 }
                 $step = [Math]::Min(4, [Math]::Max(0, [int][Math]::Floor(($it.X - 0.6) / $div)))
                 Add-Anim $sl $it.Shape $AN_FADE 0.36 (0.14 + $step * 0.12) | Out-Null
             } else {
-                $d = if ($it.X -lt 4.8) { 0.68 } else { 0.80 }
+                $d = if ($it.X -lt 4.8) { if ($it.Y -ge 3.5) { 0.74 } else { 0.66 } } else { 0.80 }
                 Add-Anim $sl $it.Shape $AN_ASCEND 0.44 $d | Out-Null
             }
         }
@@ -170,7 +170,7 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -eq 16) {
+    elseif ($sn -eq 17) {
         # FOOTPRINT CHART SLIDE
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {

@@ -649,7 +649,7 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[11]
     prepare_clean_header_slide(s, 0, "RAM Allocation & The Swiss-Cheese Fragmentation Trap", size_pt=20.8)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Where do Thread stacks & Queues get RAM? FreeRTOS offers Static buffers or Dynamic Heaps (heap_1–5)—here is the long-term trap:", size_pt=9.4)
+    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "By default, FreeRTOS xTaskCreate() allocates Thread stacks & Queues from a dynamic Heap (pvPortMalloc)—here is the trap:", size_pt=9.1)
 
     # Visual Diagram: Day 1 Clean Heap vs Day 90 Fragmented Heap
     add_card(s, 0.75, 1.34, 8.50, 1.84, "", [], dark=False, soft=True)
@@ -671,22 +671,22 @@ def build(out_path=OUT_PPTX):
     # Bottom 2 Concise Strategy Cards
     add_card(
         s, 0.75, 3.28, 4.15, 1.26,
-        "Option A · Static Allocation & heap_1",
-        "Reserve fixed compile-time arrays (xTaskCreateStatic) or allocate-only heap_1 (never frees). Guarantees 0% fragmentation forever, with extra setup code.",
-        dark=False, title_pt=10.5, body_pt=8.6
+        "Fix A · Static Allocation & heap_1",
+        "Skip the Heap: reserve fixed compile-time arrays (xTaskCreateStatic) or allocate-only heap_1 (never frees). 0% fragmentation forever, with extra setup code.",
+        dark=False, title_pt=10.5, body_pt=8.5
     )
     add_card(
         s, 5.10, 3.28, 4.15, 1.26,
-        "Option B · Dynamic heap_4 / heap_5",
-        "heap_4 merges adjacent free blocks (and heap_5 spans split RAM banks; heap_3 wraps libc). Still vulnerable to scattered holes over months of uptime.",
-        dark=False, title_pt=10.5, body_pt=8.6
+        "Fix B · Dynamic heap_4 / heap_5",
+        "Common xTaskCreate() heap: heap_4 merges adjacent free blocks (heap_5 spans split RAM banks). Helps, but still vulnerable to scattered holes over months!",
+        dark=False, title_pt=10.5, body_pt=8.5
     )
 
-    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "BRIDGE TO ZEPHYR", "To eliminate dynamic allocation traps, Zephyr defaults to Static RAM + O(1) fixed-size k_mem_slab pools!", font_size=8.4)
+    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "BRIDGE TO ZEPHYR", "To avoid Heap fragmentation by default, Zephyr puts Threads in Static RAM + uses O(1) fixed-size k_mem_slab pools!", font_size=8.3)
     set_notes(s, (
-        "طيب كل الـ Threads والـ Stacks دي بتاخد مساحتها منين في الرام؟ قدامك يا تحجز Static وقت الكومبايل (آمن بس يدوي)، "
-        "يا تستخدم Heap ديناميكي (أشهرهم heap_4 اللي بيدمج البلوكات المتجاورة). المشكلة الخطيرة إن بعد شهور من الشغل، الرام ممكن يبقى فيها 40KB فاضيين "
-        "بس متقطعين حتت 4KB متفرقة (زي الجبنة السويسري)! لأن الميكروكنترولر معندوش MMU يضمهم، أول ما تطلب 8KB الـ malloc ترجع NULL والسيستم يقع!"
+        "الـ Threads والـ Stacks في FreeRTOS بتاخد رام منين؟ بالديفولت، xTaskCreate() بتحجز الـ Stack والـ TCB من الـ Heap بـ pvPortMalloc(). "
+        "المشكلة الخطيرة إن بعد شهور من الحجز والتفضية، الرام ممكن يبقى فيها 40KB فاضيين بس متقطعين حتت 4KB متفرقة (زي الجبنة السويسري)! "
+        "ولأن الميكروكنترولر معندوش MMU يضمهم، أول ما تطلب 8KB الـ malloc ترجع NULL والسيستم يقع! الحلول في FreeRTOS: يا تحجز Static وقت الكومبايل (xTaskCreateStatic / heap_1)، يا تستخدم heap_4 اللي بيدمج المتجاور بس لسه معرض للتقطيع على المدى الطويل."
     ))
 
     # =========================================================================
@@ -744,13 +744,13 @@ def build(out_path=OUT_PPTX):
     # Left Zone: 4 Clean Stacked OS Architecture Layers
     layers_14 = [
         ("4. Application Code (main.c)",        "Your portable C/C++ logic — never hardcodes chip registers.", False, False),
-        ("3. Built-In Subsystems",              "Bluetooth, Wi-Fi/Networking, File Systems & OTA (built on top of drivers).", False, True),
+        ("3. Built-In Subsystems",              "Bluetooth, Wi-Fi/Networking, File Systems & OTA (running on top of drivers).", False, True),
         ("2. Real-Time Kernel",                 "Scheduling, Unified Interrupts, Memory Pools & MPU Isolation.", False, False),
-        ("1. Unified Driver APIs + Devicetree", "Standard C driver interfaces + hardware description files (1,000+ boards).", True, False),
+        ("1. Unified Driver APIs + Devicetree", "Standard .h interfaces (gpio.h, uart.h, spi.h) + .dts/.dtsi HW files (1,000+ boards).", True, False),
     ]
     for li, (ltitle, ldesc, ldark, lsoft) in enumerate(layers_14):
         ly = 1.38 + li * 0.80
-        add_card(s, 0.75, ly, 4.30, 0.72, ltitle, ldesc, dark=ldark, soft=lsoft, align="left", title_pt=10.0, body_pt=8.2)
+        add_card(s, 0.75, ly, 4.30, 0.72, ltitle, ldesc, dark=ldark, soft=lsoft, align="left", title_pt=10.0, body_pt=8.1)
 
     # Right Zone: Neutral Open Governance + Build UP vs Trim DOWN
     add_card(
@@ -772,97 +772,159 @@ def build(out_path=OUT_PPTX):
         dark=False, soft=True, title_pt=10.3, body_pt=8.5
     )
 
-    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "NEXT STEP", "Step 1: How does Zephyr describe a board's chips & pins outside C code? Through Devicetree!", font_size=8.4)
+    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "NEXT STEP", "Step 1: What files do you give Zephyr to describe your board & select drivers? Devicetree + prj.conf!", font_size=8.3)
     set_notes(s, (
         "عشان نفهم Zephyr ببساطة: هو نظام تشغيل مفتوح المصدر تحت مظلة Linux Foundation (مؤسسة محايدة غير ربحية، يعني مش مملوك لشركة شرائح واحدة زي ST أو Espressif)، "
         "وبرخصة Apache 2.0 (تقدر تبيع منتجك التجاري بيه ببلاش). بيتكون من 4 طبقات واضحة: تطبيقك، ثم الـ Subsystems (بلوتوث، شبكات، OTA) اللي قاعدة فوق الدرايفرات، "
-        "ثم الكيرنل، وتحتهم الدرايفرات الموحدة وملفات وصف الهاردوير (Devicetree) لأكتر من 1,000 بوردة. والفرق إن FreeRTOS بتبنيها لفوق، أما Zephyr بتقص منه اللي مش محتاجه!"
+        "ثم الكيرنل، وتحتهم الدرايفرات الموحدة (gpio.h, uart.h, spi.h بنفس الباترن) مع ملفات وصف الهاردوير (.dts/.dtsi) لأكتر من 1,000 بوردة."
     ))
 
     # =========================================================================
-    # SLIDE 15: STEP 1 — DEVICETREE (Describing Hardware Outside C!)
+    # SLIDE 15: STEP 1 — DEVICETREE + prj.conf -> GENERATED .h & DRIVER FILTER
     # =========================================================================
     s = prs.slides[14]
-    prepare_clean_header_slide(s, 0, "Step 1 · Devicetree: Describing Hardware Outside C", size_pt=20.8)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "How does Zephyr know your chip, pins & peripherals without hardcoding them in main.c? Via 3 text description files:", size_pt=9.4)
+    prepare_clean_header_slide(s, 0, "Step 1 · Devicetree & prj.conf: Build Inputs & Output", size_pt=20.4)
+    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Before compiling, Zephyr reads your board's hardware files + app config, then builds ONLY what your board needs:", size_pt=9.4)
 
-    # Top Row: 3 Layered Hardware Description Files (.dtsi + .dts + app.overlay)
+    # Top Row: Exact Build Inputs (.dtsi + .dts + vendor .c + app.overlay + prj.conf)
     add_card(
-        s, 0.75, 1.38, 2.62, 1.38,
-        "1. Chip File (.dtsi)",
+        s, 0.75, 1.36, 2.58, 1.40,
+        "1. Chip, Board & Drivers",
         [
-            ("Included with Zephyr ", "(e.g. stm32f4.dtsi)."),
-            "Describes what's inside the chip: physical port addresses, IRQs & 'compatible' driver tag.",
+            ("Included with Zephyr:", ""),
+            ("• .dtsi (Chip): ", "Physical ports & IRQs."),
+            ("• .dts (Board): ", "Built-in wiring (e.g. LED)."),
+            ("• Vendor .c: ", "Drivers (e.g. gpio_stm32.c)."),
         ],
-        dark=False, title_pt=10.2, body_pt=8.2
+        dark=False, title_pt=9.6, body_pt=7.5
     )
-    add_lead_subtitle(s, 3.41, 1.90, 0.24, 0.30, "+", size_pt=16.0, bold=True, color=COL_CHARCOAL, align="center")
+    add_lead_subtitle(s, 3.37, 1.90, 0.24, 0.30, "+", size_pt=16.0, bold=True, color=COL_CHARCOAL, align="center")
     add_card(
-        s, 3.69, 1.38, 2.62, 1.38,
-        "2. Board File (.dts)",
+        s, 3.65, 1.36, 2.74, 1.40,
+        "2. Your Overlay (app.overlay)",
         [
-            ("Included with Zephyr ", "(e.g. nucleo_f4.dts)."),
-            "Builds on .dtsi to describe what's wired on the board: clocks, buttons & built-in led0 (PA5).",
+            ("Same format as .dts — YOU write it:", ""),
+            "Sets your custom pins/sensors & 'compatible' tag (picks which vendor .c driver to use, e.g. \"st,stm32-gpio\").",
         ],
-        dark=False, soft=True, title_pt=10.2, body_pt=8.2
+        dark=True, title_pt=9.8, body_pt=7.9
     )
-    add_lead_subtitle(s, 6.35, 1.90, 0.24, 0.30, "+", size_pt=16.0, bold=True, color=COL_CHARCOAL, align="center")
+    add_lead_subtitle(s, 6.43, 1.90, 0.24, 0.30, "+", size_pt=16.0, bold=True, color=COL_CHARCOAL, align="center")
     add_card(
-        s, 6.63, 1.38, 2.62, 1.38,
-        "3. Your Overlay (app.overlay)",
+        s, 6.71, 1.36, 2.54, 1.40,
+        "3. App Config (prj.conf)",
         [
-            ("Same format as .dts — ", "written by YOU!"),
-            "Adds your own external sensors, custom pins, or overrides without editing Zephyr files.",
+            ("Features YOU want enabled:", ""),
+            "Turns subsystems & drivers ON/OFF (e.g. CONFIG_GPIO=y, CONFIG_BT=y).",
         ],
-        dark=True, title_pt=10.0, body_pt=8.2
+        dark=False, soft=True, title_pt=9.8, body_pt=8.1
     )
 
     # Middle Merge Step
     add_down_arrow(s, 4.92, 2.82, 0.16, 0.24)
-    add_lead_subtitle(s, 5.16, 2.84, 3.90, 0.26, "west build -b <board>  (Python + CMake merges all 3 files)", size_pt=8.3, bold=True, color=COL_CHARCOAL)
+    add_lead_subtitle(s, 5.16, 2.84, 4.05, 0.26, "west build -b <board>  (Pre-build: Python + CMake runs 2 actions)", size_pt=8.2, bold=True, color=COL_CHARCOAL)
 
-    # Bottom Result Row: devicetree_generated.h -> Portable main.c
+    # Bottom Result Row: Exact 2 Outputs of west build!
     add_card(
-        s, 0.75, 3.16, 4.08, 1.34,
-        "Build Output: devicetree_generated.h",
+        s, 0.75, 3.16, 4.10, 1.34,
+        "Output 1: devicetree_generated.h",
         [
-            ("Pure C #define Macros: ", "Generated before compilation with your exact port, pin & IRQ numbers."),
-            ("The 'compatible' Tag: ", "e.g. \"st,stm32-gpio\" tells CMake which vendor driver (.c) matches this board!"),
+            ("Pre-build #define Macros: ", "Generated by Python before C compilation."),
+            ("Points to Vendor .c Device: ", "Tells main.c which struct device + config to use (e.g. pin 5, IRQ, address)."),
         ],
-        dark=False, soft=True, title_pt=10.3, body_pt=8.3
+        dark=False, soft=True, title_pt=10.2, body_pt=8.2
     )
-    add_right_arrow(s, 4.90, 3.76, 0.22, 0.14)
+    add_right_arrow(s, 4.91, 3.76, 0.22, 0.14)
     add_card(
-        s, 5.18, 3.16, 4.07, 1.34,
-        "Result: Portable main.c",
+        s, 5.19, 3.16, 4.06, 1.34,
+        "Output 2: CMake Filters Vendor .c",
         [
-            ("No Hardcoded Pins: ", "Your C code asks only for DT_ALIAS(led0)—never GPIOA_PIN_5."),
-            ("Switch Boards Easily: ", "Move between STM32, nRF52 & ESP32 by swapping -b <board> & app.overlay!"),
+            ("Drops Unused .c Drivers: ", "Uses prj.conf + 'compatible' to compile ONLY your chip's .c (e.g. gpio_stm32.c)."),
+            ("Zero Dead Code: ", "ESP32 / Nordic .c drivers never even enter the compiler!"),
         ],
-        dark=False, title_pt=10.3, body_pt=8.3
+        dark=False, title_pt=10.2, body_pt=8.2
     )
 
-    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "NEXT QUESTION", "Wait—doesn't describing all board hardware in Devicetree waste microcontroller RAM? Let's check!", font_size=8.4)
+    add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "NEXT STEP", "Step 2: Now that devicetree_generated.h & gpio_stm32.c are ready—how does main.c actually talk to the chip?", font_size=8.3)
     set_notes(s, (
-        "الخطوة الأولى في فهم Zephyr: إزاي الهاردوير بيتوصف بره كود الـ C؟ عن طريق 3 ملفات وصف نصية (مش كود C!): "
-        "1) .dtsi (جاي مع Zephyr) بيوصف اللي جوه الشريحة نفسها: عناوين البورتات الفيزيائية والـ IRQs واسم الدرايفر في compatible. "
-        "2) .dts (جاي مع Zephyr) بيبني على .dtsi ويوصف اللي راكب على البوردة الجاهزة زي الـ LED الملحوم على PA5. "
-        "3) app.overlay ده بنفس فكرة الـ .dts بالظبط بس إنت اللي بتكتبه لمشروعك عشان تضيف حساساتك أو تغير بنّاتك! "
-        "وقت west build، بايثون وCMake يدمجوا الـ 3 ملفات ويطلعوا devicetree_generated.h مليان #define macros!"
+        "الخطوة الأولى: إيه المدخلات اللي بتديها لـ Zephyr عشان يبني مشروعك؟ "
+        "1) ملفات .dtsi/.dts (للشريحة والبوردة) + ملفات الـ Vendor .c drivers الجاهزة مع Zephyr (زي gpio_stm32.c وgpio_esp32.c). "
+        "2) ملف app.overlay بتكتبه إنت بنفس أسلوب الـ .dts (تحط فيه بنّاتك/حساساتك والـ compatible اللي بتشاور على أنهي ملف vendor .c درايفر هتتعامل معاه). "
+        "3) ملف prj.conf بتقول فيه أنهي ميزة عايز تفعّلها (زي CONFIG_GPIO=y). "
+        "أول ما تشغّل west build، في مرحلة الـ Pre-build قبل الكومبايل، بايثون وCMake بيعملوا حاجتين: يطلعوا devicetree_generated.h (فيه #defines تشاور على الـ struct device جوه ملف الـ .c + بياناته زي البنّاية كمثال)، ويفلتروا ملفات الـ .c بحيث درايفر شريحتك بس اللي يدخل الكومبايلر!"
     ))
 
     # =========================================================================
-    # SLIDE 16: PILLAR 04 — 0 BYTES RAM (.rodata) & REAL FOOTPRINT CHART
+    # SLIDE 16: STEP 2 — UNIFIED DRIVERS (Directly Follows Step 1!)
     # =========================================================================
     s = prs.slides[15]
+    prepare_clean_header_slide(s, 1, "Step 2 · Unified Drivers: How main.c Reaches Any Chip", size_pt=20.2)
+    add_lead_subtitle(s, 0.75, 0.92, 8.50, 0.30, "Continuing right from Step 1: how main.c uses devicetree_generated.h + ONE unified API to drive any chip (LED example):", size_pt=9.0)
+
+    chain_16 = [
+        ("1. Build Spec from .h", "GPIO_DT_SPEC_GET() reads\ndevicetree_generated.h -> spec", False),
+        ("2. Call Unified API", "main.c passes &spec to gpio.h\ne.g. gpio_pin_toggle_dt(&led)", False),
+        ("3. Unified API -> Table", "Unified API (static inline) reads\nspec.port (device) -> Flash *api", True),
+        ("4. Silicon Registers", "Vendor .c runs stm32_toggle()\n-> writes HW (GPIOA->BSRR)", False),
+    ]
+    for ci, (ch_h, ch_b, dk) in enumerate(chain_16):
+        cx = 0.75 + ci * 2.18
+        add_chain_box(s, cx, 1.30, 1.94, 1.12, ch_h, ch_b, dark=dk)
+        if ci < 3:
+            add_right_arrow(s, cx + 1.97, 1.79, 0.18, 0.14)
+
+    add_card(
+        s, 0.75, 2.54, 4.08, 1.00,
+        "Same Pattern Across Every Peripheral",
+        [
+            ("• Unified Headers: ", "gpio.h, uart.h, i2c.h, spi.h, sensor.h — even Bluetooth radios follow this exact flow!"),
+            ("• Zero Overhead: ", "CMake compiles only your chip's .c; static inline jumps straight to Flash *api."),
+        ],
+        dark=False, soft=True, title_pt=9.6, body_pt=7.8
+    )
+
+    add_card(
+        s, 0.75, 3.62, 4.08, 0.92,
+        "Note · Step 1: Spec vs. Direct Device",
+        [
+            ("• Spec (Extra Config): ", "In Step 1, bundle *device + config (e.g. GPIO pin/flags, I2C addr)."),
+            ("• Direct Device: ", "No extra config? Pull device directly (e.g. uart_poll_out(dev, 'A'))."),
+        ],
+        dark=False, soft=False, title_pt=9.3, body_pt=7.5
+    )
+
+    add_code_panel(
+        s, 4.98, 2.54, 4.27, 2.00,
+        "Example: main.c & gpio.h (LED Toggle)",
+        "// 1) Read devicetree_generated.h -> spec (*device + pin)\n"
+        "static const struct gpio_dt_spec led =\n"
+        "    GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios); // nickname\n\n"
+        "// 2) main.c passes &spec to Unified API (same on any MCU):\n"
+        "gpio_pin_toggle_dt(&led);\n\n"
+        "// 3) Inside gpio.h (static inline -> device -> Flash *api):\n"
+        "led.port->api->port_toggle_bits(led.port, BIT(led.pin));",
+        font_size=6.8, title_size=8.1
+    )
+    add_pill_banner(s, 0.75, 4.65, 8.50, 0.40, "NEXT QUESTION", "Wait—does all this Devicetree & Flash-table infrastructure waste precious microcontroller RAM? Let's check!", font_size=8.3)
+    set_notes(s, (
+        "الخطوة التانية مباشرة بعد Step 1 — إزاي main.c بتوصل فعلياً للـ Registers بتاعة الشريحة (هناخد مثال الـ LED مع GPIO): "
+        "1) ماكرو GPIO_DT_SPEC_GET بيقرأ من devicetree_generated.h اللي طلع في Step 1 ويطلعلك struct اسمه spec فيه بوينتر للـ struct device بتاع الدرايفر + بيانات التوصيل زي البنّاية والـ flags (وDT_ALIAS(led0) مجرد nickname للـ LED على البوردة). "
+        "2) في main.c إنت بتباصي &spec لدالة الـ Unified API الموحدة زي gpio_pin_toggle_dt(&led). "
+        "3) جوه gpio.h، الدالة الموحدة (static inline) بتاخد spec.port (اللي هو struct device في gpio_stm32.c) وتروح منه لجدول الـ API في الفلاش وتنادي دالة الشريحة وتكتب في الهاردوير! "
+        "وملحوظة مهمة: مش كل الدرايفرات بتستعمل spec — الـ spec بيتعمل لما نحتاج config إضافي زي رقم البن أو عنوان I2C، إنما حاجات تانية زي UART بتباصي struct device * مباشرة زي uart_poll_out(uart_dev, 'A')."
+    ))
+
+    # =========================================================================
+    # SLIDE 17: DOES THIS WASTE RAM? — 0 BYTES RAM (.rodata) & FOOTPRINT CHART
+    # =========================================================================
+    s = prs.slides[16]
     set_text(s.shapes[0], "Does Devicetree Waste RAM? Zero-Cost Flash & Size", size_pt=20.8, bold=True, color_hex="383838", font_name=FONT_HEAD)
-    stats_16 = [
+    stats_17 = [
         (4,  13, "0 Bytes RAM",     "Devicetree is never parsed at runtime"),
         (3,  12, "Build-Time Only", "Python compiles .dts into C #defines"),
-        (2,  11, "Flash (.rodata)", "const hardware structs live in Flash"),
+        (2,  11, "Flash (.rodata)", "const device & API tables live in Flash"),
         (1,  10, "~195 vs ~220 KB", "In a real IoT app, Flash delta vanishes"),
     ]
-    for hi, bi, htxt, btxt in stats_16:
+    for hi, bi, htxt, btxt in stats_17:
         set_text(s.shapes[hi], htxt, size_pt=13.5, bold=True, color_hex="383838", font_name=FONT_HEAD, align="left")
         set_text(s.shapes[bi], btxt, size_pt=8.8, bold=False, color_hex="595959", font_name=FONT_BODY, align="left")
     set_text(
@@ -875,66 +937,17 @@ def build(out_path=OUT_PPTX):
         remove_shape(old_chart_pic)
     add_monochrome_footprint_chart(s, 4.02, 1.25, 5.25, 3.30)
     set_notes(s, (
-        "أول سؤال طبيعي هيتسأل: الـ Devicetree ده مش هياخد وقت وRAM عشان يتقري والبرنامج شغال؟ "
-        "الإجابة: لأ، صفر بايت RAM! بيتقري وقت الـ Build بس بسكربتات Python تطلع devicetree_generated.h، "
-        "والـ structs الثابتة بتتحط في الفلاش (.rodata). وفي مشروع IoT كامل (BLE+MQTT+TLS+OTA) حجم Zephyr (~220 KB) بيقرب جداً من FreeRTOS (~195 KB)!"
-    ))
-
-    # =========================================================================
-    # SLIDE 17: STEP 2 — UNIFIED DRIVERS (How main.c Connects to Vendor C Code!)
-    # =========================================================================
-    s = prs.slides[16]
-    prepare_clean_header_slide(s, 1, "Step 2 · Unified Drivers: How main.c Reaches Any Chip", size_pt=20.2)
-    add_lead_subtitle(s, 0.75, 0.92, 8.50, 0.30, "Now that devicetree_generated.h knows our board, how does ONE standard function in main.c talk to STM32 or ESP32?", size_pt=9.4)
-
-    chain_17 = [
-        ("1. main.c (Spec Macro)", "Reads devicetree_generated.h\n-> gets port device + pin 5", False),
-        ("2. Driver struct device", "Defined in gpio_stm32.c:\nbase address + *api table", False),
-        ("3. API Function Table", "const table in Flash:\nmaps toggle -> stm32_tog()", True),
-        ("4. Silicon Registers", "gpio_stm32.c writes real\nhardware (GPIOA->BSRR)", False),
-    ]
-    for ci, (ch_h, ch_b, dk) in enumerate(chain_17):
-        cx = 0.75 + ci * 2.18
-        add_chain_box(s, cx, 1.32, 1.94, 1.14, ch_h, ch_b, dark=dk)
-        if ci < 3:
-            add_right_arrow(s, cx + 1.97, 1.82, 0.18, 0.14)
-
-    add_card(
-        s, 0.75, 2.60, 4.08, 1.88,
-        "How Every Zephyr Driver Works",
-        [
-            ("• One Unified Header: ", "gpio.h, uart.h, i2c.h, spi.h, sensor.h — even Bluetooth radios follow this exact pattern!"),
-            ("• Vendor C File Builds Device: ", "CMake compiles ONLY the driver (.c) matching 'compatible', creating its struct device."),
-            ("• Zero Speed Penalty: ", "gpio_pin_toggle_dt() is static inline—jumps straight to the Flash table with no extra call!"),
-        ],
-        dark=False, soft=True, title_pt=10.4, body_pt=8.3
-    )
-
-    add_code_panel(
-        s, 4.98, 2.60, 4.27, 1.88,
-        "How main.c & gpio.h Connect (5 Lines)",
-        "// 1) main.c: macro pulls device & pin from generated .h\n"
-        "static const struct gpio_dt_spec led =\n"
-        "    GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);\n\n"
-        "// 2) Inside gpio.h (static inline -> direct Flash call):\n"
-        "led.port->api->port_toggle_bits(led.port, BIT(led.pin));",
-        font_size=7.2, title_size=8.2
-    )
-    add_pill_banner(s, 0.75, 4.65, 8.50, 0.40, "NEXT STEP", "Now our drivers exist in C—but who initializes Clocks, GPIO & SPI in the right order before main()? SYS_INIT!", font_size=8.3)
-    set_notes(s, (
-        "الخطوة التانية — إزاي التوصيلة بتتم من main.c لحد الـ Registers بتاعة الشريحة؟ "
-        "1) في main.c، ماكرو GPIO_DT_SPEC_GET بيسحب من devicetree_generated.h الـ spec (مؤشر للـ device + رقم البنّاية 5). "
-        "2) الـ struct device نفسه متعرّف جوه ملف الـ C بتاع الشركة (gpio_stm32.c اللي CMake فلتره حسب compatible) وفيه عنوان البورت ومؤشر لجدول الدوال (api). "
-        "3) الدالة الموحدة في gpio.h معمولة static inline فبتنط من الجدول في الفلاش مباشرة لدالة stm32_toggle اللي تكتب في الـ Register! "
-        "ونفس الفكرة بالظبط شغالة مع UART وSPI وI2C والـ Sensors وحتى راديو البلوتوث!"
+        "السؤال اللي بييجي فوراً بعد ما فهمنا Step 1 وStep 2: هل كل الـ Devicetree وجداول الـ API دي بتاكل RAM من الميكروكنترولر؟ "
+        "الإجابة: لأ، صفر بايت RAM! الـ Devicetree بيتحوّل وقت الـ Build لـ #defines، وجداول struct device وAPI بتتخزن const في الفلاش (.rodata). "
+        "وفي مشروع IoT كامل (BLE+MQTT+TLS+OTA) حجم Zephyr (~220 KB) بيقرب جداً من FreeRTOS (~195 KB)!"
     ))
 
     # =========================================================================
     # SLIDE 18: PILLAR 05B — ORDERED SYS_INIT BOOT LEVELS (5 Clean Stages!)
     # =========================================================================
     s = prs.slides[17]
-    prepare_clean_header_slide(s, 1, "Before main() Starts: Automatic Boot Order (SYS_INIT)", size_pt=20.5)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "No more manual HAL_Init() ordering bugs—the linker automatically runs drivers in 5 ordered stages before main():", size_pt=9.5)
+    prepare_clean_header_slide(s, 1, "Before main() Starts: Automatic Boot Order (SYS_INIT)", size_pt=20.4)
+    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "No more ordering 20 manual HAL_Init() / MX_*_Init() calls in main()—Zephyr boots drivers automatically in 5 stages:", size_pt=9.2)
 
     boot_stages = [
         ("1. EARLY",        "Basic CPU & reset\nsetup before drivers.",          "No Kernel",   False),
@@ -951,21 +964,21 @@ def build(out_path=OUT_PPTX):
 
     add_card(
         s, 0.75, 3.28, 4.15, 1.24,
-        "FreeRTOS / Bare HAL (Manual Order)",
-        "You manually call HAL_Init(); SystemClock_Config(); MX_GPIO_Init(); MX_SPI1_Init(); in main()—calling them in the wrong order breaks peripherals silently!",
-        dark=False, title_pt=10.5, body_pt=8.6
+        "The Pain in FreeRTOS / Bare HAL",
+        "In main(), you manually call HAL_Init(); SystemClock_Config(); MX_GPIO_Init(); MX_SPI1_Init(); — swap two lines by mistake and peripherals fail silently!",
+        dark=False, title_pt=10.4, body_pt=8.5
     )
     add_card(
         s, 5.10, 3.28, 4.15, 1.24,
-        "Zephyr Automatic Init Table",
-        "Each driver registers its init function & boot stage via SYS_INIT(). The linker sorts them in Flash so every peripheral is ready before main() even starts!",
-        dark=False, soft=True, title_pt=10.5, body_pt=8.6
+        "Zephyr Automatic Boot Table (SYS_INIT)",
+        "Each driver registers its init function & boot stage. Before entering main(), Zephyr runs the sorted Flash table so every peripheral is ready on line 1 of main()!",
+        dark=False, soft=True, title_pt=10.4, body_pt=8.5
     )
     add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "GOLDEN RULE", "Never sleep or lock a Mutex in PRE_KERNEL_1/2 — the scheduler isn't running yet! Use POST_KERNEL for threaded drivers.", font_size=8.3)
     set_notes(s, (
-        "في FreeRTOS إنت بتنادي HAL_Init وSystemClock وMX_SPI_Init بإيدك في main، ولو لخبطت الترتيب الهاردوير بيقف في صمت. "
-        "في Zephyr كل درايفر بيسجل نفسه في مرحلة من 5 مراحل (EARLY → PRE_KERNEL_1/2 → POST_KERNEL → APPLICATION)، "
-        "والـ Linker بيرتبهم أوتوماتيك في الفلاش بحيث تدخل main() تلاقي كل البريفرالز جاهزة! وخلي بالك: ممنوع النوم أو Mutex في مراحل PRE_KERNEL لأن الكيرنل لسه مشتغلش."
+        "الميزة هنا واضحة جداً: في مشاريع STM32 وFreeRTOS العادية بتكتب أول 20 سطر في main() بإيدك: HAL_Init ثم SystemClock ثم MX_GPIO ثم MX_SPI — ولو لخبطت الترتيب الهاردوير بيقف في صمت! "
+        "في Zephyr كل درايفر بيسجّل دالة تجهيزه في مرحلة من 5 مراحل (من الـ Clocks في PRE_KERNEL_1 لحد I2C/SPI بعد ما الكيرنل يصحى في POST_KERNEL). "
+        "الـ Linker بيرتبهم أوتوماتيك في الفلاش وكود الـ Boot بيشغّلهم قبل main() — فتدخل main() تلاقي كل البريفرالز جاهزة على أول سطر!"
     ))
 
     # =========================================================================
@@ -1033,25 +1046,27 @@ def build(out_path=OUT_PPTX):
     ))
 
     # =========================================================================
-    # SLIDE 20: PILLAR 07 — RICH SCHEDULING, TICKLESS IDLE & MULTI-CORE (SMP)
+    # SLIDE 20: PILLAR 07 — 3 SCHEDULING POLICIES + 3 KERNEL EXECUTION UPGRADES
     # =========================================================================
     s = prs.slides[19]
-    set_text(s.shapes[0], "Zephyr Scheduling: Cooperative, Preemptive, EDF & SMP", size_pt=20.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
+    set_text(s.shapes[0], "Zephyr Kernel: 3 Scheduling Policies + 3 Execution Upgrades", size_pt=19.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
     grid_20 = [
-        (5,  1, "Cooperative (< 0)",      "Negative priorities (-1, -2): never preempted by other threads (only ISRs). Runs until blocking or k_yield() — avoids many mutexes!"),
-        (6,  2, "Preemptive (>= 0)",      "Preempts lower threads immediately. Note: 0 = highest priority (opposite of FreeRTOS!). Supports Round-Robin slicing."),
-        (7,  8, "Earliest Deadline (EDF)", "Optional deadline scheduler: dynamically runs whichever thread's time deadline expires soonest."),
-        (10, 3, "Workqueues (k_work)",    "Offload heavy work out of fast Interrupts onto a shared worker thread — avoids wasting extra stack RAM."),
-        (11, 4, "Tickless Idle",          "Fixes the 1 ms battery drain from Slide 6! Stops periodic tick IRQs when idle & sets one wake-up alarm (5 s sleep = 1 wakeup)."),
-        (12, 9, "Multi-Core (SMP)",       "Runs across multiple CPU cores natively using real Spinlocks (k_spin_lock) and core pinning."),
+        (5,  1, "Policy · Cooperative (< 0)", "Negative priorities (-1, -2): never preempted by other threads (only ISRs). Runs until blocking or k_yield() (SW IRQ like portYIELD)."),
+        (6,  2, "Policy · Preemptive (>= 0)", "Preempts lower threads immediately. Note: 0 = highest priority (opposite of FreeRTOS!). Supports Round-Robin time-slicing."),
+        (7,  8, "Policy · Earliest Deadline", "EDF scheduler: instead of fixed priority, runs whichever thread's time deadline expires soonest (ideal for hard real-time)."),
+        (10, 3, "Upgrade · Workqueues",       "Replaces manual ISR + Binary Semaphore + extra Thread! Pass a callback in struct k_work; a shared worker thread runs it."),
+        (11, 4, "Upgrade · Tickless Idle",    "Fixes Slide 6's 1 ms battery drain! Stops periodic tick IRQs when idle & sets ONE wake-up timer alarm (5 s sleep = 1 wakeup)."),
+        (12, 9, "Upgrade · Multi-Core (SMP)", "Runs threads simultaneously in parallel on 2+ CPU cores (e.g. ESP32, RP2040) using real Spinlocks (k_spin_lock) & core pinning."),
     ]
     for hi, bi, htxt, btxt in grid_20:
-        set_text(s.shapes[hi], htxt, size_pt=11.5, bold=True, color_hex="383838", font_name=FONT_HEAD)
-        set_text(s.shapes[bi], btxt, size_pt=9.0, color_hex="595959", font_name=FONT_BODY)
+        set_text(s.shapes[hi], htxt, size_pt=11.0, bold=True, color_hex="383838", font_name=FONT_HEAD)
+        set_text(s.shapes[bi], btxt, size_pt=8.7, color_hex="595959", font_name=FONT_BODY)
     set_notes(s, (
-        "في الجدولة، Zephyr بيكمّل على اللي شفناه في FreeRTOS ويزوّد عليه: "
-        "أولويات سالبة Cooperative متتقطعش غير بمزاجها فتقلل احتياجك للـ Mutexes، وأولويات موجبة Preemptive مع Round-Robin (وهنا 0 أعلى أولوية عكس FreeRTOS!)، "
-        "ومعاهم Earliest Deadline، وWorkqueues لتخفيف الـ ISRs، وTickless Idle اللي بيحل مشكلة البطارية بتاعة Slide 6، ودعم Multi-Core SMP بـ Spinlocks حقيقية!"
+        "السلايد دي مقسّمة بوضوح لصفّين: الصف اللي فوق فيه 3 سياسات جدولة (Scheduling Policies): "
+        "1) Cooperative (أولويات سالبة مبتتقطعش إلا بالـ block أو k_yield زي portYIELD)، "
+        "2) Preemptive (أولويات موجبة و0 أعلى أولوية عكس FreeRTOS)، و3) Earliest Deadline (EDF بيشغّل اللي ميعاد تسليمه قرب يخلص أسرع). "
+        "الصف اللي تحت فيه 3 تطويرات تنفيذ في الكيرنل: Workqueues (بديل حوار الـ ISR + Binary Semaphore، بتحط دالتك في struct k_work)، "
+        "وTickless Idle (حل بطارية Slide 6)، وMulti-Core SMP (تشغيل فعلي بالتوازي على أكتر من Core زي ESP32 وRP2040 بـ k_spin_lock)."
     ))
 
     # =========================================================================
@@ -1064,7 +1079,7 @@ def build(out_path=OUT_PPTX):
     set_text(s.shapes[6], "0-LAT", size_pt=12, bold=True, color_hex="FFFFFF", font_name=FONT_HEAD, align="center")
 
     set_text(s.shapes[7], "Standard (IRQ_CONNECT — 99%)", size_pt=11.0, bold=True, color_hex="383838", font_name=FONT_HEAD)
-    set_text(s.shapes[8], "Solves Slide 11! Zephyr wraps ISR entry/exit via _isr_wrapper. One unified k_msgq_put() checks the CPU's IPSR register in 1 cycle: in a Thread it switches now; in an ISR it switches automatically at exit!", size_pt=8.7, color_hex="595959", font_name=FONT_BODY)
+    set_text(s.shapes[8], "Solves Slide 11! Zephyr wraps ISR entry/exit via _isr_wrapper. One unified API (e.g. k_msgq_put()) checks the CPU's IPSR register in 1 cycle: in a Thread it switches now; in an ISR it switches automatically at exit!", size_pt=8.6, color_hex="595959", font_name=FONT_BODY)
 
     set_text(s.shapes[9], "Direct (IRQ_DIRECT_CONNECT)", size_pt=11.0, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(s.shapes[10], "Need maximum speed? Skips the OS wrapper (~20–30 cycles saved) so the Vector Table jumps straight to your C function, just like FreeRTOS.", size_pt=8.7, color_hex="595959", font_name=FONT_BODY)
@@ -1082,17 +1097,17 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[21]
     prepare_clean_header_slide(s, 1, "Zero-Fragmentation Pools & Turning Off Unused RAM", size_pt=20.2)
-    add_lead_subtitle(s, 0.75, 0.92, 8.50, 0.30, "Solving Slide 12's Swiss-cheese fragmentation—plus a clever trick to cut power to unused SRAM banks during sleep:", size_pt=9.4)
+    add_lead_subtitle(s, 0.75, 0.92, 8.50, 0.30, "1) Zephyr puts Threads in Static RAM by default (no Heap!).  2) Fixed-size pools eliminate Slide 12's fragmentation & save power:", size_pt=9.0)
 
     # Left Card: k_mem_slab + Intrusive Pointer Blocks
     add_card(
         s, 0.75, 1.28, 4.15, 2.90,
         "k_mem_slab: Fixed-Size O(1) Pool",
         [
-            ("• Zero Fragmentation: ", "All blocks have the exact same size; allocate & free always take O(1) time."),
-            ("• The Power Catch: ", "Stores a 4-byte 'next free' pointer INSIDE each free block—so cutting power to SRAM Bank 1 wipes those pointers!"),
+            ("• Why 0% Fragmentation: ", "Every block is identical (e.g. 64 B)—any freed block in the middle fits any new request!"),
+            ("• O(1) Free-List & Catch: ", "Stores a 4B 'next free' ptr INSIDE each free block—cutting SRAM Bank 1 power wipes them!"),
         ],
-        dark=False, title_pt=11.2, body_pt=8.7
+        dark=False, title_pt=11.0, body_pt=8.4
     )
     for b in range(3):
         bx = 0.90 + b * 1.32
@@ -1104,25 +1119,26 @@ def build(out_path=OUT_PPTX):
     # Right Card: sys_mem_blocks + Bank 0 Bitmap Diagram
     add_card(
         s, 5.10, 1.28, 4.15, 2.90,
-        "sys_mem_blocks: Separate Bitmap",
+        "sys_mem_blocks: Power Off Unused RAM",
         [
-            ("• Separated Tracking: ", "Keeps the free/used Bitmap safely inside Always-On SRAM Bank 0."),
-            ("• Deep Sleep Savings: ", "When all blocks in Bank 1 are free (Bitmap = [0|0|0|0]), Zephyr powers OFF SRAM Bank 1 safely!"),
+            ("• Separate Bitmap: ", "Moves the free/used map (1 bit per block) safely into Always-On SRAM Bank 0."),
+            ("• Deep Sleep Savings: ", "When Bank 1 is empty (Bitmap = [0|0|0|0]), Zephyr cuts power to SRAM Bank 1 safely!"),
         ],
-        dark=False, soft=True, title_pt=11.2, body_pt=8.7
+        dark=False, soft=True, title_pt=11.0, body_pt=8.4
     )
     add_lane_block(s, 5.26, 3.22, 1.80, 0.80, "SRAM Bank 0 (ON)\nBitmap: [0 | 0 | 0 | 0]", muted=False, font_pt=7.8)
     add_right_arrow(s, 7.12, 3.55, 0.16, 0.12)
     add_lane_block(s, 7.34, 3.22, 1.76, 0.80, "SRAM Bank 1\n(POWER OFF!)", dark=True, font_pt=8.0)
 
     # Bottom 3 Memory Pillars
-    add_chain_box(s, 0.75, 4.34, 2.70, 0.70, "Static-First (Default)", "K_THREAD_DEFINE reserves RAM at compile time", dark=False)
-    add_chain_box(s, 3.65, 4.34, 2.70, 0.70, "k_heap (When Dynamic)", "Thread-safe dynamic pool across RAM banks", dark=False)
+    add_chain_box(s, 0.75, 4.34, 2.70, 0.70, "Static-First (Default)", "K_THREAD_DEFINE puts stacks in Static RAM", dark=False)
+    add_chain_box(s, 3.65, 4.34, 2.70, 0.70, "k_heap (When Dynamic)", "Thread-safe dynamic pool if sizes vary", dark=False)
     add_chain_box(s, 6.55, 4.34, 2.70, 0.70, "net_buf (Zero-Copy)", "Shared packet buffers for BLE & Wi-Fi", dark=False)
     set_notes(s, (
-        "وده حل مشكلة الجبنة السويسري اللي شفناها في Slide 12: أولاً Zephyr بيحجز معظم الرام Static وقت الكومبايل (K_THREAD_DEFINE). "
-        "ثانياً للبلوكات السريعة عنده k_mem_slab كلها مقاس واحد بـ O(1) وصفر fragmentation، بس بيكتب عنوان البلوك الفاضي الجاي جوه أول 4 بايت من البلوك نفسه. "
-        "طب لو عايز تطفي كهرباء SRAM Bank 1 وقت النوم؟ هنا sys_mem_blocks بيفصل خريطة البلوكات (Bitmap) في Bank 0 الصاحية عشان تطفي Bank 1 بأمان!"
+        "حل مشكلة الجبنة السويسري في Slide 12 على خطوتين: أولاً في Zephyr الـ Default هو Static RAM (K_THREAD_DEFINE بيحجز الـ Stacks في Static segment وقت الكومبايل مش في Heap). "
+        "ثانياً للـ buffers اللي بتتحجز وتفضى وقت الشغل، k_mem_slab بيقسمها لبلوكات كلها مقاس واحد بالظبط (مثلاً 64 بايت)، فأي بلوك يفضى حتى في النص ينفع لأي طلب جديد = صفر fragmentation! "
+        "وبيستخدم Free Linked List بـ O(1) بيكتب فيها عنوان البلوك الفاضي الجاي جوه أول 4 بايت من البلوك الفاضي نفسه. "
+        "طب لو عايز تطفي كهرباء SRAM Bank 1 وقت النوم من غير ما تضيع الـ pointers؟ هنا sys_mem_blocks بيفصل الـ Bitmap (بتّاية لكل بلوك) في Bank 0 الصاحية عشان تطفي Bank 1 بأمان!"
     ))
 
     # =========================================================================
@@ -1138,24 +1154,23 @@ def build(out_path=OUT_PPTX):
         headers=["Tool", "How It Works & When to Use"],
         rows=[
             ["k_msgq", "Copies bytes by value (like FreeRTOS Queue). Safe with Stack vars!"],
-            ["k_fifo / k_lifo", "Zero-copy linked list! Uses 4 reserved bytes at start of your struct."],
+            ["k_fifo / k_lifo", "Zero-copy list (uses first 4B): FIFO = 1st-in 1st-out; LIFO = last-in 1st-out."],
             ["k_pipe", "Byte stream for variable-length UART or audio chunks."],
             ["k_poll", "Wait on MULTIPLE Queues, Semaphores & Events at the same time."],
             ["k_mutex / k_sem", "Mutex (Ownership + Priority Inheritance) vs. Semaphore / Event."],
         ],
-        col_widths=[1.30, 3.25], header_size=9.0, body_size=8.1
+        col_widths=[1.30, 3.25], header_size=9.0, body_size=8.0
     )
     add_code_panel(
         s, 5.48, 1.32, 3.77, 2.02,
         "dangling_fifo_bug.c  (CRASHES!)",
         "void send_sensor(void) {\n"
-        "  struct pkt item = {\n"
-        "    .fifo_res = 0, .val = 42\n"
-        "  };\n"
-        "  k_fifo_put(&q, &item); // Links Stack!\n"
+        "  // Local var lives on Stack (NOT copied!)\n"
+        "  struct pkt item = { .res = 0, .val = 42 };\n"
+        "  k_fifo_put(&q, &item); // Saves Stack addr!\n"
         "} // <-- Function returns! Stack WIPED!\n"
         "  // Receiver reads GARBAGE!",
-        font_size=7.4
+        font_size=7.3
     )
     add_chain_box(
         s, 5.48, 3.46, 3.77, 0.98,
@@ -1165,9 +1180,9 @@ def build(out_path=OUT_PPTX):
     )
     add_pill_banner(s, 0.75, 4.65, 8.50, 0.40, "RULE OF THUMB", "Small copy from Stack -> k_msgq.  Zero-copy large data -> k_mem_slab + k_fifo!", font_size=8.6)
     set_notes(s, (
-        "في التواصل بين الـ Threads، مقارنة مهمة بتوقع ناس كتير: k_msgq بتنسخ الداتا بالـ memcpy فآمنة مع متغيرات الـ Stack المحلية. "
-        "أما k_fifo فدي Zero-Copy linked list (سريعة للداتا الكبيرة)، بتستخدم أول 4 بايت في الـ struct كـ pointer؛ "
-        "فلو عرّفت الـ struct على الـ Stack جوه دالة وبعتّه لـ k_fifo_put، أول ما الدالة ترجع الـ Stack بيتمسح واللي بيستقبل يقرأ Garbage!"
+        "في التواصل بين الـ Threads: k_msgq بتنسخ الداتا بالـ memcpy فآمنة مع المتغيرات المحلية على الـ Stack. "
+        "أما k_fifo (اللي يدخل الأول يخرج الأول) وk_lifo (اللي يدخل الآخر يخرج الأول) فدول Zero-Copy linked lists سريعة للداتا الكبيرة وبتستخدم أول 4 بايت كـ pointer. "
+        "الفخ اللي في الكود على اليمين: item متعرّف كمتغير محلي جوه الدالة (على الـ Stack)، فلو بعت عنوانه (&item) لـ k_fifo_put، أول ما الدالة ترجع الـ Stack بيتمسح واللي بيستقبل يقرأ Garbage! لازم ييجي من static أو k_mem_slab."
     ))
 
     # =========================================================================
@@ -1175,28 +1190,28 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[23]
     set_text(s.shapes[0], "Scaling Communication: Zbus (Pub/Sub) & Multi-Core", size_pt=20.5, bold=True, color_hex="383838", font_name=FONT_HEAD)
-    set_text(s.shapes[2], "Zbus: Shared Event Channels", size_pt=12.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
+    set_text(s.shapes[2], "Queues (1-to-1) vs. Zbus (1-to-Many)", size_pt=11.8, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(
         s.shapes[4],
-        "In big apps, wiring separate Queues between every thread turns into spaghetti.\nZbus defines one typed Channel (e.g. sensor_chan) protected by a built-in mutex!",
-        size_pt=9.2, color_hex="595959", font_name=FONT_BODY
+        "With k_msgq/k_fifo, sending one sensor reading to 3 threads needs 3 separate Queues—and the sensor must know all 3!\nZbus replaces that spaghetti with ONE shared, mutex-protected Channel (e.g. sensor_chan).",
+        size_pt=9.0, color_hex="595959", font_name=FONT_BODY
     )
-    set_text(s.shapes[1], "One Publisher -> Many Listeners", size_pt=12.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
+    set_text(s.shapes[1], "Publish / Subscribe (Radio Model)", size_pt=11.6, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(
         s.shapes[3],
-        "The Sensor thread publishes one reading to sensor_chan. Bluetooth, Display & Flash Logger all listen automatically—without knowing about each other!",
-        size_pt=9.2, color_hex="595959", font_name=FONT_BODY
+        "The Sensor thread publishes once to sensor_chan without knowing who listens.\nBluetooth, Display & Flash Logger subscribe automatically—add a 4th listener tomorrow without touching sensor code!",
+        size_pt=9.0, color_hex="595959", font_name=FONT_BODY
     )
-    set_text(s.shapes[6], "Multi-Core (Linux + Zephyr)", size_pt=12.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
+    set_text(s.shapes[6], "Multi-Core AMP (Linux + Zephyr)", size_pt=11.8, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(
         s.shapes[5],
-        "On dual-core chips (e.g. Cortex-A running Linux + Cortex-M running Zephyr real-time), built-in IPC shares messages via zero-copy Shared RAM ring buffers.",
-        size_pt=9.2, color_hex="595959", font_name=FONT_BODY
+        "On asymmetric multi-core chips (e.g. Cortex-A running Linux + Cortex-M running Zephyr real-time), built-in IPC shares messages via zero-copy Shared RAM ring buffers.",
+        size_pt=9.0, color_hex="595959", font_name=FONT_BODY
     )
     set_notes(s, (
-        "لما المشروع يكبر وحساس واحد محتاج يبعت لـ 3 أماكن (بلوتوث، شاشة، تسجيل)، في FreeRTOS بتعمل 3 Queues متشابكة. "
-        "في Zephyr فيه Zbus بمبدأ Publish/Subscribe: الحساس ينشر على قناة واحدة (sensor_chan) وكل المهتمين يسمعوه من غير ما يعرفوا بعض! "
-        "ولو عندك شريحة فيها كور بيشغل Linux وكور بيشغل Zephyr، فيه تواصل جاهز بينهم عبر Shared RAM من غير نسخ داتا."
+        "الفرق الجوهري بين Slide 23 وSlide 24: الـ Queues العادية (k_msgq/k_fifo) علاقة 1-to-1؛ فلو حساس الحرارة عايز يبعت لـ 3 Threads (شاشة، بلوتوث، تسجيل)، "
+        "لازم تعمل 3 Queues وحساس الحرارة يعرفهم التلاتة! في Zephyr، Zbus بيشتغل بنظام 1-to-Many (Publish/Subscribe زي قناة راديو): "
+        "الحساس ينشر مرة واحدة على قناة sensor_chan، والكل يشترك فيها أوتوماتيك من غير ما يعرفوا بعض! ولو عندك شريحة فيها Core Linux وCore Zephyr (AMP)، فيه تواصل جاهز عبر Shared RAM."
     ))
 
     # =========================================================================
@@ -1204,26 +1219,26 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[24]
     prepare_clean_header_slide(s, 0, "Hardware Isolation: MPU User Mode & Memory Domains", size_pt=20.2)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "In typical RTOS apps, every thread can read/write ALL RAM—one buggy pointer in Wi-Fi/BLE can crash the whole chip!", size_pt=9.5)
+    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Default FreeRTOS runs Flat RAM (no MPU)—every thread sees ALL memory, so one bad pointer can crash the whole chip!", size_pt=9.2)
 
     # Left Card: The Risk Without Isolation
     add_card(
         s, 0.75, 1.38, 3.25, 3.12,
         "Without Isolation (Flat RAM)",
         [
-            ("• Full Access Everywhere: ", "Every thread runs in Privileged mode and sees all memory."),
-            ("• One Bug Crashes All: ", "A buffer overflow in a network parser silently overwrites Kernel tables or Motor control RAM."),
-            ("• Hard to Debug: ", "The crash often happens far away from the real bug!"),
+            ("• Full Access Everywhere: ", "Every thread runs Privileged & sees all RAM (FreeRTOS-MPU exists, but needs manual setup)."),
+            ("• One Bug Crashes All: ", "A buffer overflow in Wi-Fi/BLE silently overwrites Kernel tables or Motor RAM."),
+            ("• Hard to Debug: ", "The chip crashes far away from the real bug!"),
         ],
-        dark=False, soft=True, title_pt=10.8, body_pt=8.7
+        dark=False, soft=True, title_pt=10.6, body_pt=8.4
     )
 
     # Right Visual: Zephyr MPU User Mode Isolation Diagram
     add_card(
         s, 4.22, 1.38, 5.03, 0.88,
         "KERNEL MODE (Privileged — Owns Hardware & OS)",
-        "User threads cannot touch kernel RAM directly—they request services ONLY via checked System Calls (SVC).",
-        dark=True, align="left", title_pt=10.2, body_pt=8.3
+        "User threads see ONLY their own Stack + their assigned Memory Domain (approved global buffers). OS calls go via SVC.",
+        dark=True, align="left", title_pt=10.1, body_pt=8.1
     )
     add_down_arrow(s, 5.40, 2.32, 0.14, 0.24)
     add_down_arrow(s, 7.92, 2.32, 0.14, 0.24)
@@ -1233,28 +1248,29 @@ def build(out_path=OUT_PPTX):
         s, 4.22, 2.62, 2.42, 1.88,
         "User Domain A (BLE / Net)",
         [
-            "Can access ONLY its own packet RAM partition.",
-            ("• HW Stack Guard: ", "Traps overflow immediately."),
-            ("• Contained Crash: ", "Only Thread A faults!"),
+            "Domain = its Stack + ble_rx_buf[] only.",
+            ("• HW Stack Guard: ", "Traps stack overflow immediately."),
+            ("• Contained Crash: ", "Only BLE faults—Motor stays safe!"),
         ],
-        dark=False, title_pt=10.0, body_pt=8.3
+        dark=False, title_pt=10.0, body_pt=8.2
     )
     add_card(
         s, 6.83, 2.62, 2.42, 1.88,
         "User Domain B (Motor)",
         [
-            "Completely walled off from Domain A & Kernel.",
-            ("• Explicit Grants: ", "Accesses only approved Queues."),
+            "Domain = its Stack + motor_pid RAM only.",
+            ("• Walled Off: ", "Cannot touch Domain A or Kernel."),
             ("• Keeps Running: ", "Motor control stays safe!"),
         ],
-        dark=False, title_pt=10.0, body_pt=8.3
+        dark=False, title_pt=10.0, body_pt=8.2
     )
 
     add_pill_banner(s, 0.75, 4.66, 8.50, 0.40, "CONFIG_USERSPACE=y", "Powered by the CPU's hardware Memory Protection Unit (MPU) — catches bad pointers & stack overflows the instant they happen!", font_size=8.2)
     set_notes(s, (
-        "في الـ RTOS العادي كل الـ Threads شغالة بصلاحيات كاملة وشايفة الرام كلها، فلو Pointer خرف في كود البلوتوث ممكن يمسح بيانات الموتور أو الكيرنل. "
-        "في Zephyr لو فعّلت User Mode (CONFIG_USERSPACE=y)، هاردوير الـ MPU بيحط سور حول كل Thread (Memory Domain) وحارس على الـ Stack؛ "
-        "فلو Thread A ضربت، تتقفل هي لوحدها وThread الموتور والكيرنل يفضلوا في أمان تام!"
+        "في FreeRTOS العادي (الديفولت)، كل الـ Threads شغالة Flat RAM بصلاحيات كاملة من غير MPU (نسخة FreeRTOS-MPU موجودة بس إعدادها يدوي)، "
+        "فلو Pointer خرف في كود البلوتوث ممكن يمسح بيانات الموتور أو الكيرنل. "
+        "في Zephyr بسطر واحد (CONFIG_USERSPACE=y)، هاردوير الـ MPU بيدي كل Thread 'صندوق صلاحيات' اسمه Memory Domain: "
+        "Domain A للبلوتوث (يشوف الـ Stack بتاعه + ble_rx_buf[] بس)، وDomain B للموتور (يشوف الـ Stack بتاعه + motor_pid بس) — فلو البلوتوث ضرب، الموتور والكيرنل يفضلوا في أمان تام!"
     ))
 
     # =========================================================================
@@ -1513,7 +1529,7 @@ def build(out_path=OUT_PPTX):
             ["[3]", "ARM Cortex-M4 Generic User Guide (SysTick, PendSV, NVIC, IPSR, MPU)", "developer.arm.com/documentation/dui0553"],
             ["[4]", "Zephyr Build System, Devicetree (.dts/.overlay), Kconfig & west — Slides 15–19", "docs.zephyrproject.org/latest/build/dts/"],
             ["[5]", "Zephyr Kernel Services (EDF, SMP, _isr_wrapper, Slabs, IPC, Domains) — Slides 20–25", "docs.zephyrproject.org/latest/kernel/"],
-            ["[6]", "Zephyr Subsystems, Drivers, Zbus, PM Policy & native_sim — Slides 17, 24, 27–29", "docs.zephyrproject.org/latest/services/"],
+            ["[6]", "Zephyr Subsystems, Drivers, Zbus, PM Policy & native_sim — Slides 16, 24, 27–29", "docs.zephyrproject.org/latest/services/"],
             ["[7]", "Zephyr Hardware Support, Security & Safety (IEC 61508 / ISO 26262) — Slides 14, 26", "docs.zephyrproject.org/latest/security/"],
             ["[8]", "MCUboot Signed OTA Rollback & ARM TrustZone (TF-M) — Slide 26", "docs.mcuboot.com  |  trustedfirmware.org"],
         ],
