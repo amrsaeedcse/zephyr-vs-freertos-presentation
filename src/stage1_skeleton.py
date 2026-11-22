@@ -6,54 +6,59 @@ REPO_ROOT = os.path.dirname(SRC_DIR)
 ASSETS_DIR = os.path.join(REPO_ROOT, "assets")
 
 TPL = os.path.join(ASSETS_DIR, "template_base.pptx")
-WORK = os.path.join(tempfile.gettempdir(), "zephyr_freertos_skel_work")
-SKEL = os.path.join(ASSETS_DIR, "template_skeleton_34.pptx")
+WORK = os.path.join(tempfile.gettempdir(), "zephyr_embedded_skel_work")
+SKEL = os.path.join(ASSETS_DIR, "template_skeleton_32.pptx")
 SCRIPTS = os.path.join(REPO_ROOT, ".agents", "skills", "pptx", "scripts")
 ADD_SLIDE = os.path.join(SCRIPTS, "add_slide.py")
 CLEAN = os.path.join(SCRIPTS, "clean.py")
 VALIDATE = os.path.join(SCRIPTS, "office", "validate.py")
 
-# Exact 34-slide sequence mapped to original template slide numbers (1-indexed)
+# Exact 32-slide sequence mapped to original template slide numbers (1-indexed)
+# Split: S1 Shared Cover | S2-7 Speaker 1 | S8-13 Speaker 2 | S14-19 Speaker 3 | S20-25 Speaker 4 | S26-31 Speaker 5 | S32 Shared Verdict
 PLAN = [
-    1,   # 01: Cover (UX balanced, zero ugly white box)
-    3,   # 02: Presentation Roadmap (6 coherent stages + clean arrows)
-    4,   # 03: Why RTOS? Super-Loop Stall vs Event-Blocked Threads (with MCU photo)
-    6,   # 04: Inside Every Thread (TCB + Private Stack + 4-State Lifecycle Diagram)
-    8,   # 05: How Threads Share One CPU (Preemptive Priority & Round-Robin Lanes)
-    8,   # 06: Inside Every 1 ms System Tick (4-Stage Left-to-Right Pipeline + Context Switch)
-    19,  # 07: Blocking Discipline (xTicksToWait Concentric Rings + Narrative Story)
-    6,   # 08: Thread Coordination (Queues vs Binary Semaphores vs Mutexes)
-    8,   # 09: The Priority Inversion Trap & Priority Inheritance Fix (Visual Tracks)
-    6,   # 10: Fast Shared-Data Protection (Critical Sections & BASEPRI Threshold Ladder)
-    8,   # 11: Vector Table Reality (Why FreeRTOS Needs *FromISR() & Manual Exit Switch)
-    12,  # 12: Memory Allocation & The Swiss-Cheese Fragmentation Trap (Day 1 vs Day 90 Visual)
-    5,   # 13: Architectural Pivot 02 — Moving Beyond Micro-Kernels: Enter Zephyr RTOS (Boards Photo)
-    15,  # 14: Zephyr Batteries-Included Embedded OS Canvas
-    18,  # 15: Devicetree 3-Layer Hardware Decoupling Tree
-    11,  # 16: 0 Bytes RAM (.rodata) & Real Footprint Chart
-    6,   # 17: Unified Driver Model (gpio_dt_spec -> struct device -> api + static inline)
-    8,   # 18: Ordered SYS_INIT Boot Levels Before main() (5-Stage Left-to-Right Sequence)
-    17,  # 19: Kconfig (prj.conf) + CMake + west & Sysbuild
-    9,   # 20: Rich Scheduling: Cooperative (<0), Preemptive (>=0), EDF, Workqueues, Tickless & SMP
-    19,  # 21: Smarter Interrupts (_isr_wrapper, 1-cycle IPSR, Direct & Zero-Latency)
-    6,   # 22: Deterministic Memory (k_mem_slab Intrusive List vs sys_mem_blocks Power Gating)
-    17,  # 23: IPC Toolbox & The k_fifo Stack Lifetime Trap
-    7,   # 24: Zbus Pub/Sub Software Bus & Zero-Copy Multi-Core AMP
-    18,  # 25: MPU User Mode, Memory Domains & Hardware Stack Guards
-    7,   # 26: ARM TrustZone (TF-M), MCUboot Atomic OTA & Safety Certifications
-    19,  # 27: Automatic Power Management (PM Policy Manager & Device Runtime PM)
-    7,   # 28: Built-In Connectivity & Storage Stacks (BLE, IPv6/Matter, LittleFS)
-    4,   # 29: Boot Firmware on Your PC: native_sim, west twister & Observability (Lab Photo)
-    6,   # 30: Side-by-Side Code Showdown (freertos_stm32.c vs zephyr_portable.c)
-    16,  # 31: Where Zephyr Hurts: 4 Honest Engineering Trade-Offs
-    12,  # 32: FreeRTOS vs Zephyr: Full Architecture Matrix
-    12,  # 33: References & Official Technical Documentation
-    20,  # 34: Engineering Verdict — Thank You & Q&A
+    1,   # 01: Hero Cover — Zephyr RTOS: Silicon-to-Cloud Embedded OS (Shared: Team 8 / CSE 421/422)
+    # --- Speaker 1: Omar Abdelsalam Abdelfattah (Slides 2-7) ---
+    3,   # 02: 6-Stage Presentation Roadmap (30-Min / 5-Speaker Plan)
+    4,   # 03: Pure Embedded Systems: Direct Silicon Control + Grand Protocol Unifier (mcu_silicon.jpg)
+    6,   # 04: Why RTOS Is Mandatory: CSE 421/422 Breaking Points (4 Course Traps)
+    19,  # 05: Real-Time Determinism vs. Average Throughput (Hard/Firm/Soft Deadlines)
+    6,   # 06: Firmware Concurrency Models: Super-Loop vs. ISR-Heavy (volatile) vs. RTOS
+    12,  # 07: The Golden Course Map: ATmega32 (Lec 1-10) -> Zephyr RTOS (8-Row Table)
+    # --- Speaker 2: Amr Abdelazim Saeed (Slides 8-13) ---
+    6,   # 08: Single-Core Execution Illusion & 4 Thread States (Time-Slicing + Blocking Discipline)
+    12,  # 09: Inside Every Thread: SRAM Layout (TCB, PSP/MSP, MPU Stack Guard & Static-First)
+    8,   # 10: Hardware Context Switching: AVR RETI -> ARM Cortex-M SysTick, z_swap() & PendSV (Prio 15)
+    6,   # 11: Interrupt Latency & Selective Critical Sections: BASEPRI vs. PRIMASK / cli()
+    8,   # 12: Priority Inversion & The Mars Pathfinder (1997) Bug — Solved by k_mutex Inheritance
+    6,   # 13: Day 1 vs. Day 90 Memory Reality: Heap Fragmentation & Static-First Allocation
+    # --- Speaker 3: Omar Ahmed Abdelaziz Mashhour (Slides 14-19) ---
+    5,   # 14: Section Pivot — Enter Zephyr RTOS v4.5 (Oct 2026 Reality & Real Hardware, zephyr_boards.jpg)
+    15,  # 15: Zephyr RTOS: Full "Batteries-Included" Embedded OS Canvas (Trims DOWN vs Builds UP)
+    18,  # 16: Devicetree: 3-Layer Hardware Decoupling (.dtsi -> .dts -> app.overlay -> 0 C Edits)
+    11,  # 17: 0 Bytes RAM for Devicetree: .rodata Flash Compilation & Real Footprint Chart
+    6,   # 18: Unified Driver Model: Solving Lecture 2 Slide 45 (Flash V-Tables + static inline)
+    8,   # 19: Before main() Starts: 5 Linker-Sorted SYS_INIT Boot Levels
+    # --- Speaker 4: Ali Mohamed Ali (Slides 20-25) ---
+    17,  # 20: Kconfig (prj.conf), CMake Dead-Code Pruning & west (--sysbuild / west spdx)
+    9,   # 21: Rich Scheduling & Tickless Idle (Meta-IRQ, Coop <0, Preempt >=0, EDF, Workqueues, CTC)
+    19,  # 22: Smarter Interrupts: Why No *FromISR()? (_isr_wrapper, 1-cycle IPSR, Direct, Zero-Latency)
+    6,   # 23: Deterministic Memory & Power: O(1) k_mem_slab vs. sys_mem_blocks SRAM Bank Power-Off
+    17,  # 24: IPC Toolbox, The k_fifo Stack Trap & Zbus Pub/Sub
+    6,   # 25: Hardware Memory Isolation: User Mode Threads, k_mem_domain & SVC Firewall
+    # --- Speaker 5: Ahmed Hassan Mohamed Mostafa (Slides 26-31) ---
+    7,   # 26: Embedded Protocol Unifier (All 16 Class Teams), TrustZone (TF-M), MCUboot & SIL 3 Safety
+    19,  # 27: Automatic Power Management: Midterm Q2 Automated (PM Policy, Runtime PM, Domains)
+    6,   # 28: Course Upgrade Showdown: Lec 7 HVAC (ATmega32 TCNT1/ADATE -> Portable Zephyr C)
+    12,  # 29: Embedded RTOS Matrix: Bare-Metal (ATmega32) vs. FreeRTOS vs. Zephyr v4.5
+    4,   # 30: Boot Firmware on Your PC: native_sim, west twister & Shell Demo (embedded_lab.jpg)
+    6,   # 31: Honest Engineering Trade-Offs & Embedded Linux / AMP Boundary
+    # --- Shared Closing Slide ---
+    20,  # 32: Engineering Verdict — Decision Guide & Thank You / Q&A Ready
 ]
 
 
 def build_skeleton(out_skel=SKEL, validate=True):
-    assert len(PLAN) == 34
+    assert len(PLAN) == 32, f"Expected 32 slides in PLAN, got {len(PLAN)}"
     os.makedirs(os.path.dirname(out_skel), exist_ok=True)
     if os.path.exists(WORK):
         shutil.rmtree(WORK)
@@ -116,7 +121,7 @@ def build_skeleton(out_skel=SKEL, validate=True):
     if os.path.exists(WORK):
         shutil.rmtree(WORK)
 
-    print("BUILT SKELETON 34:", out_skel, os.path.getsize(out_skel))
+    print("BUILT SKELETON 32:", out_skel, os.path.getsize(out_skel))
     if validate and os.path.exists(VALIDATE):
         subprocess.run([sys.executable, VALIDATE, out_skel, "--original", TPL], check=True)
     return out_skel

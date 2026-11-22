@@ -1,4 +1,4 @@
-param([string]$TargetPptx = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_vs_FreeRTOS.pptx"))
+param([string]$TargetPptx = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_Embedded_Systems.pptx"))
 $ErrorActionPreference = "Stop"
 
 # Verified PowerPoint COM constants
@@ -44,15 +44,15 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
         $sl.TimeLine.MainSequence.Item(1).Delete()
     }
 
-    # 1. Pro Slide Transition Choreography (34 slides)
+    # 1. Pro Slide Transition Choreography (32 slides)
     $tr = $sl.SlideShowTransition
     if ($sn -eq 1) {
         $tr.EntryEffect = $TR_FADE; $tr.Duration = 0.6
-    } elseif ($sn -in @(3, 13, 30, 34)) {
-        # Major narrative pivots: Part I start, Part II Enter Zephyr, Code Showdown, Final Verdict
+    } elseif ($sn -in @(3, 14, 28, 32)) {
+        # Major narrative pivots: Embedded Reality, Enter Zephyr v4.5, Course Code Showdown, Final Verdict
         $tr.EntryEffect = $TR_PUSH_L; $tr.Duration = 0.72
-    } elseif ($sn -in @(2, 14, 16, 29, 32, 33)) {
-        # Structural reveals: Roadmap, OS Canvas, Footprint Chart, native_sim, Full Matrix, References
+    } elseif ($sn -in @(2, 7, 15, 17, 29, 30)) {
+        # Structural reveals: Roadmap, Course Map, OS Canvas, Footprint Chart, Matrix, native_sim Lab
         $tr.EntryEffect = $TR_REVEAL; $tr.Duration = 0.60
     } else {
         $tr.EntryEffect = $TR_FADE; $tr.Duration = 0.48
@@ -72,8 +72,8 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
         if ($sh.HasTextFrame -eq -1) {
             try { $txt = $sh.TextFrame.TextRange.Text.Trim() } catch {}
         }
-        $isTopTitle = ($sn -notin @(1, 13)) -and ($y -lt 0.92) -and ($w -gt 4.0) -and ($txt.Length -gt 0) -and (-not $isPic)
-        $isLeadSub  = ($sn -notin @(1, 13)) -and ($y -ge 0.85) -and ($y -le 1.15) -and ($w -gt 7.0) -and ($h -lt 0.5)
+        $isTopTitle   = ($sn -notin @(1, 14)) -and ($y -lt 0.92) -and ($w -gt 4.0) -and ($txt.Length -gt 0) -and (-not $isPic)
+        $isLeadSub    = ($sn -notin @(1, 14)) -and ($y -ge 0.85) -and ($y -le 1.15) -and ($w -gt 7.0) -and ($h -lt 0.5)
         $isBottomPill = ($y -gt 4.40) -and ($w -gt 4.5) -and ($h -lt 0.85) -and (-not $isPic)
 
         $items += [PSCustomObject]@{
@@ -86,11 +86,15 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
 
     # 2. Slide-Specific Motion Choreography
     if ($sn -eq 1) {
-        # HERO COVER: Smooth Ascend Title + Gentle Fade on borderless Subtitle
-        $titleSh = $items | Where-Object { $_.Y -lt 3.0 } | Select-Object -First 1
-        $subSh   = $items | Where-Object { $_.Y -ge 3.0 } | Select-Object -First 1
+        # HERO COVER: Smooth Ascend Title + Gentle Fade on Subtitle & Course/Team Metadata
+        $titleSh = $items | Where-Object { $_.Y -lt 2.8 } | Select-Object -First 1
+        $others  = $items | Where-Object { $_.Y -ge 2.8 } | Sort-Object Y
         if ($titleSh) { Add-Anim $sl $titleSh.Shape $AN_ASCEND 0.72 0.15 | Out-Null }
-        if ($subSh)   { Add-Anim $sl $subSh.Shape   $AN_FADE   0.60 0.45 | Out-Null }
+        $d = 0.42
+        foreach ($it in $others) {
+            Add-Anim $sl $it.Shape $AN_FADE 0.55 $d | Out-Null
+            $d += 0.18
+        }
     }
     elseif ($sn -eq 2) {
         # ROADMAP: 6 numbered columns cascade cleanly 01 -> 02 -> 03 -> 04 -> 05 -> 06
@@ -105,8 +109,8 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             Add-Anim $sl $it.Shape $eff 0.38 $d $dir | Out-Null
         }
     }
-    elseif ($sn -in @(3, 13, 29)) {
-        # HERO HARDWARE PHOTO SLIDES (MCU Macro, Zephyr Boards Pivot, Debugger Lab)
+    elseif ($sn -in @(3, 14, 30)) {
+        # HERO HARDWARE PHOTO SLIDES (MCU Silicon, Zephyr Boards Pivot, native_sim Lab)
         $picIt = $items | Where-Object { $_.IsPic } | Select-Object -First 1
         if ($picIt) { Add-Anim $sl $picIt.Shape $AN_FZOOM 0.78 0.10 | Out-Null }
         $others = $items | Where-Object { -not $_.IsPic -and -not $_.IsTopTitle } | Sort-Object Y, X
@@ -120,20 +124,16 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -in @(6, 9, 11, 17, 18)) {
-        # LEFT-TO-RIGHT 4 OR 5 STAGE PIPELINES (SysTick, Priority Inversion, *FromISR, Unified Drivers, SYS_INIT)
+    elseif ($sn -in @(10, 12, 18, 19)) {
+        # LEFT-TO-RIGHT MULTI-STAGE PIPELINES (Context Switch, Mars Pathfinder, Unified Drivers, SYS_INIT)
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
             if ($it.IsLeadSub) {
                 Add-Anim $sl $it.Shape $AN_FADE 0.32 0.08 | Out-Null
             } elseif ($it.IsBottomPill) {
                 Add-Anim $sl $it.Shape $AN_WIPE 0.48 0.90 $DIR_RIGHT | Out-Null
-            } elseif ($sn -in @(9) -and $it.Y -ge 2.95) {
-                # Bottom Fix Track follows Top Trap Track
-                $step = [Math]::Min(3, [Math]::Max(0, [int][Math]::Floor(($it.X - 0.6) / 2.1)))
-                Add-Anim $sl $it.Shape $AN_FADE 0.38 (0.58 + $step * 0.10) | Out-Null
             } elseif ($it.Y -lt 3.20) {
-                $div = if ($sn -eq 18) { 1.70 } else { 2.10 }
+                $div = if ($sn -eq 19) { 1.70 } elseif ($sn -eq 18) { 2.75 } else { 2.10 }
                 $step = [Math]::Min(4, [Math]::Max(0, [int][Math]::Floor(($it.X - 0.6) / $div)))
                 Add-Anim $sl $it.Shape $AN_FADE 0.36 (0.14 + $step * 0.12) | Out-Null
             } else {
@@ -142,8 +142,8 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -in @(7, 21, 27)) {
-        # CONCENTRIC RINGS + 3 RIGHT ICON CALLOUTS (Blocking, Interrupts, Power)
+    elseif ($sn -in @(5, 22, 27)) {
+        # CONCENTRIC RINGS + 3 RIGHT ICON CALLOUTS (Determinism, Interrupts IPSR, Automatic Power Management)
         $lefts  = $items | Where-Object { -not $_.IsTopTitle -and -not $_.IsLeadSub -and $_.X -lt 4.35 } | Sort-Object W -Descending
         $rights = $items | Where-Object { -not $_.IsTopTitle -and -not $_.IsLeadSub -and $_.X -ge 4.35 }
         foreach ($it in $items | Where-Object { $_.IsLeadSub }) {
@@ -158,8 +158,8 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             Add-Anim $sl $it.Shape $AN_ASCEND 0.44 (0.45 + $band * 0.16) | Out-Null
         }
     }
-    elseif ($sn -in @(15, 25)) {
-        # HIERARCHICAL TREES (Devicetree & MPU Memory Domains)
+    elseif ($sn -eq 16) {
+        # HIERARCHICAL TREE (Devicetree 3-Layer Cascade)
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
             if ($it.IsBottomPill) {
@@ -170,7 +170,7 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -eq 16) {
+    elseif ($sn -eq 17) {
         # FOOTPRINT CHART SLIDE
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
@@ -184,8 +184,8 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
             }
         }
     }
-    elseif ($sn -in @(30, 34)) {
-        # DUAL HERO SHOWDOWN (Code Showdown & Final Engineering Verdict + Q&A)
+    elseif ($sn -in @(28, 32)) {
+        # DUAL HERO SHOWDOWN (Course HVAC Upgrade & Final Engineering Verdict + Q&A)
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
             if ($it.IsBottomPill) {
@@ -198,7 +198,7 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
         }
     }
     else {
-        # ALL REMAINING CONTENT SLIDES (Task Anatomy, CPU Lanes, Sync 3-Col, BASEPRI Ladder, Frag Day1 vs Day90, Canvas, Mem Slabs, Tables, Trade-offs, Refs)
+        # ALL REMAINING CONTENT SLIDES
         $body = $items | Where-Object { -not $_.IsTopTitle }
         foreach ($it in $body) {
             if ($it.IsLeadSub) {
@@ -228,4 +228,3 @@ if ($pp.Presentations.Count -eq 0) {
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($pp) | Out-Null
 
 Write-Host "ANIMATED_OK: FILE=$TargetPptx SLIDES=$sc TOTAL_ANIM_EFFECTS=$totalEffects SIZE=$((Get-Item $TargetPptx).Length)"
-

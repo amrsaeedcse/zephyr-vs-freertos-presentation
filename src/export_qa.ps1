@@ -1,13 +1,13 @@
 param(
-    [string]$TargetPptx = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_vs_FreeRTOS.pptx"),
-    [string]$OutPdf = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_vs_FreeRTOS.pdf"),
+    [string]$TargetPptx = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_Embedded_Systems.pptx"),
+    [string]$OutPdf = (Join-Path (Split-Path $PSScriptRoot -Parent) "Zephyr_RTOS_Embedded_Systems.pdf"),
     [switch]$ExportPdf,
     [switch]$ExportPngs
 )
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
-$qaDir = Join-Path ([System.IO.Path]::GetTempPath()) "zephyr_freertos_qa_slides"
+$qaDir = Join-Path ([System.IO.Path]::GetTempPath()) "zephyr_embedded_qa_slides"
 
 $pp = New-Object -ComObject PowerPoint.Application
 $pres = $pp.Presentations.Open($TargetPptx, $true, $false, $false)
