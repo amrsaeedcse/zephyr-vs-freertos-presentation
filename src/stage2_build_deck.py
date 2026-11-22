@@ -11,7 +11,7 @@ from stage2_populate_utils import (
     set_text, set_cell_text, remove_shape, replace_pic_with_cropped,
     add_code_panel, add_pill_banner, add_monochrome_footprint_chart,
     add_chain_box, add_verdict_card, add_right_arrow, add_down_arrow, add_up_arrow,
-    add_left_right_arrow, add_lead_subtitle, add_card, add_lane_block,
+    add_left_right_arrow, add_lead_subtitle, add_card, add_lane_block, add_dark_badge,
     clear_fill_and_line, set_notes,
     COL_CHARCOAL, COL_MUTED, COL_SILVER, COL_PLATINUM, COL_WHITE, COL_SOFTBG,
     FONT_HEAD, FONT_BODY, FONT_CODE, A_NS
@@ -115,29 +115,45 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[0]
     s.shapes[0].left = Inches(3.79)
-    s.shapes[0].top = Inches(1.70)
+    s.shapes[0].top = Inches(1.48)
     s.shapes[0].width = Inches(5.43)
-    s.shapes[0].height = Inches(1.55)
+    s.shapes[0].height = Inches(1.50)
     s.shapes[0].text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     set_text(s.shapes[0], ["Zephyr RTOS", "vs. FreeRTOS"], size_pt=43, bold=True, color_hex="383838", font_name=FONT_HEAD, align="center")
 
     # Remove the opaque white slab box behind subtitle so typography floats naturally on canvas
     clear_fill_and_line(s.shapes[1])
     s.shapes[1].left = Inches(3.79)
-    s.shapes[1].top = Inches(3.32)
+    s.shapes[1].top = Inches(3.06)
     s.shapes[1].width = Inches(5.43)
-    s.shapes[1].height = Inches(0.48)
+    s.shapes[1].height = Inches(0.44)
     s.shapes[1].text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
     set_text(s.shapes[1], "From Real-Time Kernel Internals to a Full Embedded OS", size_pt=13.5, bold=False, color_hex="595959", font_name=FONT_BODY, align="center")
+
+    tb_meta = s.shapes.add_textbox(Inches(3.55), Inches(3.64), Inches(5.90), Inches(0.32))
+    tf_m = tb_meta.text_frame
+    tf_m.word_wrap = True
+    tf_m.margin_left = tf_m.margin_right = tf_m.margin_top = tf_m.margin_bottom = 0
+    p = tf_m.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = "CSE 421/422 Embedded Systems  ·  Zagazig University  ·  Dr. Ahmed Osman Mahmoud"
+    r.font.name = FONT_BODY
+    r.font.size = Pt(9.0)
+    r.font.bold = True
+    r.font.color.rgb = COL_CHARCOAL
+
+    add_dark_badge(s, 5.20, 4.02, 2.60, 0.30, "Team 8  ·  Topic 8  ·  24-11", font_size=8.6)
+
     set_notes(s, (
-        "أهلاً بكم يا دكتور ويا شباب. النهاردة مش هنعرض Zephyr RTOS ككلام نظري؛ "
+        "أهلاً بكم يا دكتور أحمد ويا شباب — إحنا Team 8 (Topic 8 · CSE 421/422 Embedded Systems). النهاردة مش هنعرض Zephyr RTOS ككلام نظري؛ "
         "هنبدأ الأول بسرد هندسي واضح وسريع يشرح إزاي الـ RTOS وFreeRTOS بيشتغلوا من جوه خطوة بخطوة "
         "(تقسيم المهام، حالات الـ Thread، الجدولة، الـ Blocking، المزامنة، المقاطعات، والذاكرة)، "
-        "عشان لما ندخل في Zephyr تشوف كل ميزة كحل مباشر لمشكلة حقيقية في الإنتاج."
+        "عشان لما ندخل في Zephyr تشوف كل ميزة كحل مباشر لمشكلة حقيقية في الإنتاج ومربوطة بمنهجنا."
     ))
 
     # =========================================================================
-    # SLIDE 2: EXECUTIVE PRESENTATION ROADMAP (Coherent Narrative + Clean Uniform Arrows)
+    # SLIDE 2: EXECUTIVE PRESENTATION ROADMAP (Fair 5 × 6-Slide Team 8 Split!)
     # =========================================================================
     s = prs.slides[1]
     set_text(s.shapes[0], "Presentation Roadmap", size_pt=25, bold=True, color_hex="383838", font_name=FONT_HEAD)
@@ -145,34 +161,39 @@ def build(out_path=OUT_PPTX):
     for sh in [s.shapes[14], s.shapes[13]]:
         remove_shape(sh)
 
-    # Widen label boxes evenly centered beneath boxes 01..06 (Proportional: 2 Part-I + 4 Zephyr Core!)
+    # Exact fair 5 × 6-slide core split (S3–S32 = 30 slides) + Shared Intro (S1–S2) & Closer (S33–S34)
     roadmap_cfg = [
-        (7,  0.89, 2.24, "RTOS & FreeRTOS Basics",       "Why RTOS, TCB/Stack, Preemption, Tick & Blocking"),
-        (8,  3.77, 2.24, "Sync, Interrupts & Memory",    "Queues, Mutex/Priority Inversion, BASEPRI, *FromISR & Heap"),
-        (9,  6.64, 2.24, "Zephyr Hardware & Build",      "Devicetree (.dts), .rodata zero-RAM, Drivers & Kconfig"),
-        (10, 0.89, 4.14, "Zephyr Kernel Internals",      "Coop/EDF/SMP scheduling, unified ISRs & k_mem_slab"),
-        (11, 3.77, 4.14, "IPC, Security & Power",        "k_fifo/Zbus, MPU Domains, TrustZone, OTA & PM Policy"),
-        (12, 6.64, 4.14, "Simulation, Code & Verdict",   "Connectivity, native_sim, Code Showdown & Matrix"),
+        (7,  0.89, 2.22, "RTOS Basics & Sync",           "Why RTOS, TCB/Stack, Preemption, Tick, Blocking & Sync",     "Omar Abdelsalam · S3–S8",  2.90),
+        (8,  3.77, 2.22, "RTOS Traps & Enter Zephyr",    "Priority Inversion, BASEPRI, *FromISR, Heap & Zephyr OS",    "Amr Abdelazim · S9–S14",   2.90),
+        (9,  6.64, 2.22, "Devicetree, Drivers & Sched",  "Step 1 DTS/prj.conf, Step 2 APIs, .rodata, SYS_INIT & SMP",  "Omar Mashhour · S15–S20",  2.90),
+        (10, 0.89, 4.10, "Kernel, IPC, MPU & Security",  "Zero *FromISR, k_mem_slab, k_fifo/Zbus, MPU & TrustZone",    "Ali Mohamed · S21–S26",    4.78),
+        (11, 3.77, 4.10, "Power, Sim, Code & Matrix",    "Auto PM, Stacks, native_sim, Code Showdown, Limits & Matrix", "Ahmed Hassan · S27–S32",  4.78),
+        (12, 6.64, 4.10, "References, Verdict & Q&A",    "Official Documentation, Engineering Verdict & Full Team Q&A", "Team 8 · S33–S34",        4.78),
     ]
-    for si, lx, ly, lhead, ldesc in roadmap_cfg:
+    for si, lx, ly, lhead, ldesc, spk_badge, by in roadmap_cfg:
         sh = s.shapes[si]
         sh.left = Inches(lx)
         sh.top = Inches(ly)
         sh.width = Inches(2.46)
-        sh.height = Inches(0.84)
+        sh.height = Inches(0.66)
         set_text(
             sh,
             [[(lhead, True, "383838")], [(ldesc, False, "595959")]],
-            size_pt=10.0, font_name=FONT_BODY, align="center", space_after_pt=3
+            size_pt=9.2, font_name=FONT_BODY, align="center", space_after_pt=2
         )
+        add_dark_badge(s, lx + 0.14, by, 2.18, 0.25, spk_badge, font_size=7.6)
     # Add 4 uniform horizontal arrows cleanly connecting 01->02->03 and 04->05->06
     for ax in (3.44, 6.32):
         add_right_arrow(s, ax, 1.72, 0.24, 0.16)
         add_right_arrow(s, ax, 3.62, 0.24, 0.16)
     set_notes(s, (
-        "دي خريطة العرض الكاملة في 6 محطات متوازنة: أول محطتين (01 و02) بنبني فيهم أساس الـ RTOS وFreeRTOS بسرعة ووضوح "
-        "(ليه RTOS، الـ TCB والـ Stack، الجدولة، الـ Blocking، المزامنة وPriority Inversion، المقاطعات والذاكرة)، "
-        "وباقي 4 محطات (03 لحد 06) هم صلب العرض عن Zephyr RTOS: الهاردوير والـ Devicetree، قلب الكيرنل، الأمان والباور، لحد المحاكاة ومقارنة الكود والقرار النهائي."
+        "دي خريطة العرض الكاملة متقسمة بالعدل الكامل على أعضاء Team 8 (5 متكلمين × 6 سلايدات محتوى بالظبط = 30 سلايد + افتتاح وختام مشترك): "
+        "01 عمر عبدالسلام (S3–S8): أساسيات الـ RTOS وFreeRTOS والمزامنة؛ "
+        "02 عمرو عبدالعظيم (S9–S14): تحديات الـ RTOS ودخول عالم Zephyr؛ "
+        "03 عمر مشهور (S15–S20): الـ Devicetree والدرايفرات الموحدة والبيلد والجدولة؛ "
+        "04 علي محمد (S21–S26): المقاطعات الموحدة والذاكرة والـ IPC والـ MPU والأمان؛ "
+        "05 أحمد حسن (S27–S32): الباور والاتصالات والـ native_sim ومقارنة الكود والماتريكس؛ "
+        "06 ختام مشترك لكل التيم (S33–S34): المراجع والقرار الهندسي والأسئلة!"
     ))
 
     # =========================================================================
@@ -202,6 +223,7 @@ def build(out_path=OUT_PPTX):
         ],
         dark=False, title_pt=10.8, body_pt=8.9
     )
+    add_dark_badge(s, 3.24, 5.12, 2.40, 0.25, "CSE · Lec 3 PWM · Lab 3 · Lec 4/6", font_size=7.2)
     add_card(
         s, 0.72, 3.18, 4.92, 1.30,
         "2. The RTOS Solution: Threads + Event Blocking",
@@ -368,7 +390,8 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[5]
     prepare_clean_header_slide(s, 1, "Inside Every System Tick (1 ms): SysTick & PendSV", size_pt=20.8)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Every 1 System Tick (1 ms), the hardware SysTick timer updates OS time and enforces both scheduling rules:", size_pt=9.8)
+    add_lead_subtitle(s, 0.75, 0.94, 6.40, 0.32, "Every 1 System Tick (1 ms), the hardware SysTick timer updates OS time and enforces both scheduling rules:", size_pt=8.9)
+    add_dark_badge(s, 7.20, 0.92, 2.05, 0.26, "CSE · Extends Lec 6 RETI", font_size=7.4)
 
     stages_6 = [
         ("1. SysTick IRQ",
@@ -458,7 +481,8 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[7]
     prepare_clean_header_slide(s, 1, "Coordinating Threads: Queues, Semaphores & Mutexes", size_pt=21.0)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Wait—what ARE those events and locks threads block on? Each tool solves a specific problem:", size_pt=10.0)
+    add_lead_subtitle(s, 0.75, 0.94, 6.00, 0.32, "Wait—what ARE those events and locks threads block on? Each tool solves a specific problem:", size_pt=9.8)
+    add_dark_badge(s, 6.95, 0.92, 2.30, 0.26, "CSE · Lec 9 volatile ≠ atomic", font_size=7.5)
 
     coords = [
         ("1. Message Queue", False, [
@@ -591,6 +615,7 @@ def build(out_path=OUT_PPTX):
     )
 
     add_pill_banner(s, 0.75, 4.68, 8.50, 0.38, "1-CORE vs MULTI-CORE", "1-core MCU: BASEPRI masking alone protects the section. Multi-core SMP (Zephyr): k_spin_lock adds a Spinlock across cores!", font_size=8.1)
+    add_dark_badge(s, 0.75, 5.14, 3.15, 0.25, "CSE · Lec 4 S22 · AVR cli() / Lec 9 DOR", font_size=7.4)
     set_notes(s, (
         "طيب افرض فيه Thread وInterrupt بيتشاركوا متغيرين صغيرين (speed وdir) في سطرين بس؛ هنا الـ Mutex تقيل ومينفعش أصلاً جوه الـ ISR! "
         "لو الـ Interrupt ضرب بين السطر الأول والتاني هيقرأ داتا مكسورة (نص قديم ونص جديد). "
@@ -739,7 +764,8 @@ def build(out_path=OUT_PPTX):
     # =========================================================================
     s = prs.slides[13]
     prepare_clean_header_slide(s, 0, "Zephyr RTOS: What It Is & How It's Layered", size_pt=21.2)
-    add_lead_subtitle(s, 0.75, 0.94, 8.50, 0.32, "Not just a standalone kernel—Zephyr is an open-source embedded OS organized into 4 clear layers:", size_pt=9.7)
+    add_lead_subtitle(s, 0.75, 0.94, 6.20, 0.32, "Not just a standalone kernel—Zephyr is an open-source embedded OS organized into 4 clear layers:", size_pt=9.5)
+    add_dark_badge(s, 7.05, 0.92, 2.20, 0.26, "CSE · Lec 2 (4-Layer OS)", font_size=7.5)
 
     # Left Zone: 4 Clean Stacked OS Architecture Layers
     layers_14 = [
@@ -905,6 +931,7 @@ def build(out_path=OUT_PPTX):
         font_size=6.8, title_size=8.1
     )
     add_pill_banner(s, 0.75, 4.65, 8.50, 0.40, "NEXT QUESTION", "Wait—does all this Devicetree & Flash-table infrastructure waste precious microcontroller RAM? Let's check!", font_size=8.3)
+    add_dark_badge(s, 0.75, 5.14, 2.75, 0.25, "CSE · Solves Lec 2 S45 HAL Overhead", font_size=7.4)
     set_notes(s, (
         "الخطوة التانية مباشرة بعد Step 1 — إزاي main.c بتوصل فعلياً للـ Registers بتاعة الشريحة (هناخد مثال الـ LED مع GPIO): "
         "1) ماكرو GPIO_DT_SPEC_GET بيقرأ من devicetree_generated.h اللي طلع في Step 1 ويطلعلك struct اسمه spec فيه بوينتر للـ struct device بتاع الدرايفر + بيانات التوصيل زي البنّاية والـ flags (وDT_ALIAS(led0) مجرد nickname للـ LED على البوردة). "
@@ -1061,6 +1088,7 @@ def build(out_path=OUT_PPTX):
     for hi, bi, htxt, btxt in grid_20:
         set_text(s.shapes[hi], htxt, size_pt=11.0, bold=True, color_hex="383838", font_name=FONT_HEAD)
         set_text(s.shapes[bi], btxt, size_pt=8.7, color_hex="595959", font_name=FONT_BODY)
+    add_dark_badge(s, 3.55, 4.92, 2.90, 0.26, "CSE · Tickless = Lec 4 Timer CTC", font_size=7.6)
     set_notes(s, (
         "السلايد دي مقسّمة بوضوح لصفّين: الصف اللي فوق فيه 3 سياسات جدولة (Scheduling Policies): "
         "1) Cooperative (أولويات سالبة مبتتقطعش إلا بالـ block أو k_yield زي portYIELD)، "
@@ -1320,6 +1348,7 @@ def build(out_path=OUT_PPTX):
 
     set_text(s.shapes[11], "3. Automatic Power Domains", size_pt=11.2, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(s.shapes[12], "When every device inside a chip power block is suspended, Zephyr powers down the entire hardware rail cleanly—zero manual sleep glue code!", size_pt=8.8, color_hex="595959", font_name=FONT_BODY)
+    add_dark_badge(s, 5.55, 4.94, 3.25, 0.26, "CSE · Automates Lec 2 & Midterm Q2", font_size=7.6)
     set_notes(s, (
         "في أجهزة البطارية، بدل ما تكتب كود النوم وتطفي الـ Clocks بإيدك زي FreeRTOS: "
         "1) مدير الطاقة في Zephyr بيشوف كل الـ Threads هتنام قد إيه ويختار أعمق وضع نوم مناسب أوتوماتيك (WFI / STOP / DEEP). "
@@ -1338,6 +1367,7 @@ def build(out_path=OUT_PPTX):
         "Native TCP/IP, TLS encryption, MQTT, HTTP & Wi-Fi—plus built-in Matter, Thread, USB & CANbus ready out of the box.",
         size_pt=9.1, color_hex="595959", font_name=FONT_BODY
     )
+    add_dark_badge(s, 2.75, 0.98, 4.50, 0.26, "CSE · Unifies Class Protocols (MQTT · CoAP · Modbus · LoRa)", font_size=7.5)
     set_text(s.shapes[1], "Complete Bluetooth LE Stack", size_pt=12.0, bold=True, color_hex="383838", font_name=FONT_HEAD)
     set_text(
         s.shapes[3],
@@ -1591,6 +1621,7 @@ def build(out_path=OUT_PPTX):
         "Master FreeRTOS to understand the RTOS heart — adopt Zephyr when your product needs an OS, not just a kernel.",
         font_size=8.8
     )
+    add_dark_badge(s, 0.75, 5.14, 2.15, 0.25, "Team 8 · CSE 421/422", font_size=7.5)
     set_notes(s, (
         "الخلاصة الهندسية: اختيار الـ RTOS مبيبقاش بالموضة، بيبقى بقيود المشروع. اختار FreeRTOS لو الشريحة محدودة (<64KB) "
         "ومشروعك تحكم بسيط مرتبط بـ HAL واحدة ومحتاج سرعة بداية. واختار Zephyr لو بتبني منتج IoT متصل (BLE/Matter/MQTT) "

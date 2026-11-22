@@ -86,11 +86,15 @@ for ($sn = 1; $sn -le $slideCount; $sn++) {
 
     # 2. Slide-Specific Motion Choreography
     if ($sn -eq 1) {
-        # HERO COVER: Smooth Ascend Title + Gentle Fade on borderless Subtitle
+        # HERO COVER: Smooth Ascend Title + Gentle Fade on borderless Subtitle & Course Footer
         $titleSh = $items | Where-Object { $_.Y -lt 3.0 } | Select-Object -First 1
-        $subSh   = $items | Where-Object { $_.Y -ge 3.0 } | Select-Object -First 1
+        $subs    = $items | Where-Object { $_.Y -ge 3.0 } | Sort-Object Y
         if ($titleSh) { Add-Anim $sl $titleSh.Shape $AN_ASCEND 0.72 0.15 | Out-Null }
-        if ($subSh)   { Add-Anim $sl $subSh.Shape   $AN_FADE   0.60 0.45 | Out-Null }
+        $sd = 0.45
+        foreach ($subSh in $subs) {
+            Add-Anim $sl $subSh.Shape $AN_FADE 0.58 $sd | Out-Null
+            $sd += 0.16
+        }
     }
     elseif ($sn -eq 2) {
         # ROADMAP: 6 numbered columns cascade cleanly 01 -> 02 -> 03 -> 04 -> 05 -> 06

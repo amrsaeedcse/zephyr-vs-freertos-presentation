@@ -22,6 +22,33 @@ COL_WHITE    = RGBColor(0xFF, 0xFF, 0xFF)
 COL_MIDGRAY  = RGBColor(0x88, 0x88, 0x88)
 COL_SOFTBG   = RGBColor(0xF5, 0xF5, 0xF5)
 
+
+def add_dark_badge(slide, x, y, w, h, text, font_size=7.6):
+    """Crisp monochrome charcoal badge (#383838 fill + bold #FFFFFF text) for course/speaker tags."""
+    box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    box.adjustments[0] = 0.22
+    box.fill.solid()
+    box.fill.fore_color.rgb = COL_CHARCOAL
+    box.line.fill.background()
+    _disable_shadow(box)
+
+    tf = box.text_frame
+    tf.word_wrap = False
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = Inches(0.08)
+    tf.margin_right = Inches(0.08)
+    tf.margin_top = Inches(0.02)
+    tf.margin_bottom = Inches(0.02)
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = text
+    r.font.name = FONT_HEAD
+    r.font.size = Pt(font_size)
+    r.font.bold = True
+    r.font.color.rgb = COL_WHITE
+    return box
+
 FONT_HEAD = "Schibsted Grotesk"
 FONT_BODY = "Figtree"
 FONT_CODE = "JetBrains Mono"
